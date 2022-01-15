@@ -143,7 +143,7 @@ class Address(BaseModel):
     """
     地址信息数据模型
     """
-    region = models.ForeignKey(
+    region_id = models.ForeignKey(
         Region,
         on_delete=models.CASCADE,
         verbose_name="地区"
