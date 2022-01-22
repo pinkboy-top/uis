@@ -1,12 +1,16 @@
 """
 uis系统数据模型
 """
+import os
 import uuid
 
 from django.db import models
 
-
 # Create your models here.
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
+
+from uis import settings
 
 
 class BaseModel(models.Model):
@@ -17,9 +21,6 @@ class BaseModel(models.Model):
     update_date = models.DateTimeField(auto_now=True, verbose_name="更新日期")
     status = models.BooleanField(default=True, verbose_name="状态")
     is_delete = models.BooleanField(default=False, verbose_name="删除状态")
-
-    def __str__(self):
-        return self.status
 
     class Meta:
         ordering = ["create_date"]
@@ -85,6 +86,7 @@ class ImgType(BaseModel):
     图片类型数据模型
     """
     type_name = models.CharField(max_length=256, verbose_name="图片类型名称")
+    type_path = models.CharField(max_length=256, verbose_name="类型路径")
 
     def __str__(self):
         return self.type_name
@@ -99,7 +101,7 @@ class Img(BaseModel):
     """
     图片数据模型
     """
-    img_url = models.ImageField(verbose_name="图片链接")
+    img_url = models.ImageField(upload_to='uploads/avatar/', verbose_name="图片链接")
     img_type = models.ForeignKey(
         ImgType,
         on_delete=models.CASCADE,
@@ -107,7 +109,7 @@ class Img(BaseModel):
     )
 
     def __str__(self):
-        return self.img_url
+        return str(self.img_url)
 
     class Meta:
         ordering = ["create_date"]
@@ -186,12 +188,13 @@ class UserInfo(BaseModel):
         on_delete=models.CASCADE,
         verbose_name="性别选项"
     )
-    age = models.IntegerField(verbose_name="用户年龄")
-    summary = models.CharField(max_length=512, verbose_name="用户简介")
-    email = models.EmailField(verbose_name="邮箱")
+    birthday = models.DateTimeField(verbose_name="生日")
+    summary = models.CharField(max_length=512, default="没有简介。。。。", verbose_name="用户简介")
+    email = models.EmailField(null=True, verbose_name="邮箱")
     area = models.ForeignKey(
         Address,
         on_delete=models.CASCADE,
+        null=True,
         verbose_name="用户地区"
     )
 

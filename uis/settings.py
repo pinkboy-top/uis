@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'user'
+    'user',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +49,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # 注册允许跨域中间件
 ]
 
 ROOT_URLCONF = 'uis.urls'
@@ -120,7 +122,36 @@ USE_TZ = False
 
 STATIC_URL = '/static/'
 
+STATIC_ROOT = os.path.join(BASE_DIR, "static_cdn")
+
+# 配置 MEDIA_ROOT 作为你上传文件在服务器中的基本路径
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# 配置 MEDIA_URL 作为公用 URL，指向上传文件的基本路径
+MEDIA_URL = '/media/'
+# 支持上传的文件类型
+FILE_TYPE = ['mp4', 'gif', 'jpeg', 'jpg', 'png']
+# 设置文件上传的大小最大5M
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 允许全部来源
+CORS_ORIGIN_ALLOW_ALL = True  # 如果为True，将不使用白名单，并且将接受所有来源。默认为False。
+
+# 白名单
+CORS_ORIGIN_WHITELIST = [
+    "http://127.0.0.1:8080"
+]
+
+# 允许跨域请求的方法
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
