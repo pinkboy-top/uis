@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+import datetime
 import os
 from pathlib import Path
 
@@ -39,6 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'user',
     'corsheaders',
+    'rest_framework',
+    'rest_framework_jwt',
+    'rest_framework_jwt.blacklist',
 ]
 
 MIDDLEWARE = [
@@ -155,3 +159,58 @@ CORS_ALLOW_METHODS = [
     'POST',
     'PUT',
 ]
+
+# Django DRF配置
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        # 默认访问权限
+        'rest_framework.permissions.IsAdminUser',
+    ],
+    # 默认分页
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 10,
+    # 默认权限登录方式
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+    ],
+}
+
+# jwt配置
+JWT_AUTH = {
+    'JWT_SECRET_KEY': SECRET_KEY,
+    'JWT_GET_USER_SECRET_KEY': None,
+    'JWT_PRIVATE_KEY': None,
+    'JWT_PUBLIC_KEY': None,
+    # 默认加密算法
+    'JWT_ALGORITHM': 'HS256',
+    'JWT_INSIST_ON_KID': False,
+    'JWT_TOKEN_ID': 'include',
+    'JWT_AUDIENCE': None,
+    'JWT_ISSUER': None,
+    'JWT_ENCODE_HANDLER':
+        'rest_framework_jwt.utils.jwt_encode_payload',
+    'JWT_DECODE_HANDLER':
+        'rest_framework_jwt.utils.jwt_decode_token',
+    'JWT_PAYLOAD_HANDLER':
+        'rest_framework_jwt.utils.jwt_create_payload',
+    'JWT_PAYLOAD_GET_USERNAME_HANDLER':
+        'rest_framework_jwt.utils.jwt_get_username_from_payload_handler',
+    'JWT_PAYLOAD_INCLUDE_USER_ID': True,
+    'JWT_VERIFY': True,
+    'JWT_VERIFY_EXPIRATION': True,
+    'JWT_LEEWAY': 0,
+    # token过期时间默认5分钟
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=300),
+    'JWT_ALLOW_REFRESH': True,
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
+    'JWT_AUTH_HEADER_PREFIX': 'Bearer',
+    'JWT_RESPONSE_PAYLOAD_HANDLER':
+        'rest_framework_jwt.utils.jwt_create_response_payload',
+    'JWT_AUTH_COOKIE': None,
+    'JWT_AUTH_COOKIE_DOMAIN': None,
+    'JWT_AUTH_COOKIE_PATH': '/',
+    'JWT_AUTH_COOKIE_SECURE': True,
+    'JWT_AUTH_COOKIE_SAMESITE': 'Lax',
+    'JWT_IMPERSONATION_COOKIE': None,
+    'JWT_DELETE_STALE_BLACKLISTED_TOKENS': False,
+}

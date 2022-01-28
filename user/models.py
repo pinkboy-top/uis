@@ -34,7 +34,7 @@ class User(BaseModel):
     """
     uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name="用户ID")
     account = models.CharField(max_length=256, unique=True, verbose_name="账号")
-    password = models.CharField(max_length=512, verbose_name="密码")
+    password = models.CharField(max_length=512, editable=False, verbose_name="密码")
     phone = models.CharField(max_length=256, verbose_name="手机号")
 
     def __str__(self):

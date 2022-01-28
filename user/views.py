@@ -2,24 +2,19 @@
 用户模块基本功能
 """
 import base64
-import json
 import uuid
 
 from django.http import JsonResponse, request
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.decorators import authentication_classes
+from rest_framework_jwt.views import obtain_jwt_token
 from werkzeug.security import generate_password_hash, check_password_hash
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from uis import settings
 from user.models import User, UserInfo, Option, OptionType, Img, ImgType
-
-
-def to_dict(res: request) -> dict:
-    if res.body:
-        str_data = res.body.decode('UTF-8')
-        return json.loads(str_data)
-    else:
-        return {}
+from user.utils.basic import to_dict
 
 
 @csrf_exempt
@@ -95,3 +90,13 @@ def user_login(res: request):
                 return JsonResponse({"code": -5, "msg": f"账号不存在！"})
     else:
         return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
+
+
+@authentication_classes([JSONWebTokenAuthentication])
+def home(res: request):
+    """
+    首页需要携带token
+    """
+    print(obtain_jwt_token())
+    if res:
+        return JsonResponse({"data": {"code": 200, "msg": "hello"}})
