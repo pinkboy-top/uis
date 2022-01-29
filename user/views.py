@@ -7,14 +7,11 @@ import uuid
 from django.http import JsonResponse, request
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework.decorators import authentication_classes
-from rest_framework_jwt.views import obtain_jwt_token
 from werkzeug.security import generate_password_hash, check_password_hash
-from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from uis import settings
 from user.models import User, UserInfo, Option, OptionType, Img, ImgType
-from user.utils.basic import to_dict
+from user.utils.basic import to_dict, get_token, login_auth
 
 
 @csrf_exempt
@@ -83,20 +80,20 @@ def user_login(res: request):
             try:
                 user = User.objects.get(account=data.get('account'))
                 if check_password_hash(user.password, data.get('password')):
-                    return JsonResponse({"code": 200, "msg": "登录成功"})
+                    token = get_token({"data": {"uid": user.account}})
+                    return JsonResponse({"code": 200, "msg": "登录成功", "data": {"token": token}})
                 else:
                     return JsonResponse({"code": -10, "msg": "密码或账号错误！"})
             except ObjectDoesNotExist:
-                return JsonResponse({"code": -5, "msg": f"账号不存在！"})
+                return JsonResponse({"code": -5, "msg": "账号不存在！"})
     else:
         return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
 
 
-@authentication_classes([JSONWebTokenAuthentication])
+@login_auth
 def home(res: request):
     """
     首页需要携带token
     """
-    print(obtain_jwt_token())
     if res:
         return JsonResponse({"data": {"code": 200, "msg": "hello"}})

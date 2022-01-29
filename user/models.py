@@ -1,16 +1,11 @@
 """
 uis系统数据模型
 """
-import os
 import uuid
 
 from django.db import models
 
 # Create your models here.
-from django.db.models.signals import pre_delete
-from django.dispatch import receiver
-
-from uis import settings
 
 
 class BaseModel(models.Model):
