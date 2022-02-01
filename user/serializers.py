@@ -3,7 +3,7 @@
 """
 from rest_framework import serializers
 
-from user.models import User
+from user.models import User, UserInfo
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -13,3 +13,13 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
         fields = ('uid', 'account', 'phone')
+
+
+class UserInfoSerializer(serializers.HyperlinkedModelSerializer):
+    """
+    用户详情模型序列化类
+    """
+    class Meta:
+        model = UserInfo
+        fields = ('uid', 'nick_name', 'avatar', 'gender', 'birthday', 'summary', 'account', 'phone')
+        depth = 1

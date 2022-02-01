@@ -10,8 +10,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from uis import settings
-from user.models import User, UserInfo, Option, OptionType, Img, ImgType
-from user.utils.basic import to_dict, get_token, login_auth
+from user.models import User, UserInfo, Option, Img, ImgType
+from user.serializers import UserInfoSerializer
+from user.utils.basic import to_dict, verify_args, get_token, login_auth, get_payload
 
 
 @csrf_exempt
@@ -21,14 +22,7 @@ def reg_user(res: request):
     """
     if res.method == 'POST':
         data = to_dict(res)
-        flag = True
-        for key in data.keys():
-            if data.get(key):
-                pass
-            else:
-                flag = False
-                break
-        if flag:
+        if verify_args(data):
             if User.objects.filter(account=data.get('account')):
                 return JsonResponse({"code": -10, "msg": "该账号已存在！"}, json_dumps_params={'ensure_ascii': False})
             try:
@@ -69,18 +63,11 @@ def user_login(res: request):
     """
     if res.method == "POST":
         data = to_dict(res)
-        flag = True
-        for key in data.keys():
-            if data.get(key):
-                pass
-            else:
-                flag = False
-                break
-        if flag:
+        if verify_args(data):
             try:
                 user = User.objects.get(account=data.get('account'))
                 if check_password_hash(user.password, data.get('password')):
-                    token = get_token({"data": {"uid": user.account}})
+                    token = get_token({"data": {"account": user.account}})
                     return JsonResponse({"code": 200, "msg": "登录成功", "data": {"token": token}})
                 else:
                     return JsonResponse({"code": -10, "msg": "密码或账号错误！"})
@@ -97,3 +84,26 @@ def home(res: request):
     """
     if res:
         return JsonResponse({"data": {"code": 200, "msg": "hello"}})
+
+
+@csrf_exempt
+@login_auth
+def get_user_info(res: request):
+    """
+    获取用户详情
+    """
+    if res.method == "POST":
+        data = to_dict(res)
+        if verify_args(data):
+            try:
+                token = res.META.get("HTTP_AUTHORIZATION")
+                if token:
+                    # 获取token中的数据
+                    user = User.objects.get(account=get_payload(token).get("data").get("account"))
+                    user_info = UserInfo.objects.get(uid=user.uid)
+                    serializer = UserInfoSerializer(user_info, many=True)
+                    return JsonResponse({'code': 200, 'msg': 'security', 'data': serializer.data}, safe=False)
+            except ObjectDoesNotExist:
+                return JsonResponse({"code": -5, "msg": "账号不存在！"})
+    else:
+        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})

@@ -23,6 +23,19 @@ def to_dict(res: request) -> dict:
         return {}
 
 
+def verify_args(args: dict) -> bool:
+    """
+    验证前端提交的数据完整性
+    args: 前端提交的数据，已经转字典
+    """
+    for key in args.keys():
+        if args.get(key):
+            pass
+        else:
+            return False
+    return True
+
+
 def to_ba64(d_str: str) -> bytes:
     """
     返回编码后的base64字节对象
@@ -123,9 +136,12 @@ def get_payload(token: str) -> dict:
     获取token中的自定义载荷
     b64_str: base64编码后的payload数据段
     """
-    temp = token.split(".")
-    payload = ba64_to_str(temp[1])
-    return json.loads(payload)
+    if token:
+        temp = token.split(".")
+        payload = ba64_to_str(temp[1])
+        return json.loads(payload)
+    else:
+        return {}
 
 
 def login_auth(func: Callable):
@@ -136,7 +152,7 @@ def login_auth(func: Callable):
     def is_login(res: request):
         result = func(res)
         token = res.META.get("HTTP_AUTHORIZATION")
-        if not token:
+        if token is None:
             return JsonResponse({"code": -1, "msg": "未登录!"})
         # 验证token是否过期
         if verify_token(b'pink-boy', token):
