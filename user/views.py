@@ -100,9 +100,12 @@ def get_user_info(res: request):
                 if token:
                     # 获取token中的数据
                     user = User.objects.get(account=get_payload(token).get("data").get("account"))
-                    user_info = UserInfo.objects.get(uid=user.uid)
-                    serializer = UserInfoSerializer(user_info, many=True)
-                    return JsonResponse({'code': 200, 'msg': 'security', 'data': serializer.data}, safe=False)
+                    user_info = UserInfo.objects.get(user_id=user.uid)
+                    result = {
+                        "account": user.account,
+                        "nick_name": user_info.nick_name
+                    }
+                    return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
             except ObjectDoesNotExist:
                 return JsonResponse({"code": -5, "msg": "账号不存在！"})
     else:

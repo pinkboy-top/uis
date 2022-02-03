@@ -21,5 +21,5 @@ class UserInfoSerializer(serializers.HyperlinkedModelSerializer):
     """
     class Meta:
         model = UserInfo
-        fields = ('uid', 'nick_name', 'avatar', 'gender', 'birthday', 'summary', 'account', 'phone')
+        fields = ('user_id', 'nick_name', 'avatar', 'gender', 'birthday', 'summary', 'account', 'phone')
         depth = 1

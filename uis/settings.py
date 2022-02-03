@@ -174,8 +174,8 @@ JWT_TOKEN = {
     "header": {"alg": "HS256", "typ": "JWT"},
     "payload": {
         # 过期时间默认是12小时
-        # "exp": time.time() + 60 * 60 * 12,
-        "exp": time.time() + 10,
+        "exp": time.time() + 60 * 60 * 12,
+        # "exp": time.time() + 10,
         "nbf": time.time(),
         # 签发者
         "iss": "pink",
