@@ -103,7 +103,12 @@ def get_user_info(res: request):
                     user_info = UserInfo.objects.get(user_id=user.uid)
                     result = {
                         "account": user.account,
-                        "nick_name": user_info.nick_name
+                        "nickname": user_info.nick_name,
+                        "avatar": f"http://{res.get_host()}{user_info.avatar.img_url.url}",
+                        "gender": user_info.gender.option_name,
+                        "summary": user_info.summary,
+                        "birthday": user_info.birthday.strftime("%y-%m-%d"),
+                        "create_date": user_info.create_date.strftime("%y-%m-%d")
                     }
                     return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
             except ObjectDoesNotExist:

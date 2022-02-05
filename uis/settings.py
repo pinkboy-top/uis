@@ -145,7 +145,7 @@ CORS_ORIGIN_ALLOW_ALL = True  # 如果为True，将不使用白名单，并且�
 
 # 白名单
 CORS_ORIGIN_WHITELIST = [
-    "http://127.0.0.1:8080"
+    "http://192.168.6.205"
 ]
 
 # 允许跨域请求的方法
