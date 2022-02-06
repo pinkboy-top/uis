@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
+    'simpleui',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -145,7 +146,7 @@ CORS_ORIGIN_ALLOW_ALL = True  # 如果为True，将不使用白名单，并且�
 
 # 白名单
 CORS_ORIGIN_WHITELIST = [
-    "http://192.168.6.205"
+    "http://127.0.0.1"
 ]
 
 # 允许跨域请求的方法
@@ -187,3 +188,5 @@ JWT_TOKEN = {
     }
 }
 
+
+SIMPLEUI_HOME_INFO = False
