@@ -2,6 +2,7 @@
 用户模块基本功能
 """
 import base64
+import time
 import uuid
 
 from django.http import JsonResponse, request
@@ -12,7 +13,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from uis import settings
 from user.models import User, UserInfo, Option, Img, ImgType
 from user.serializers import UserInfoSerializer
-from user.utils.basic import to_dict, verify_args, get_token, login_auth, get_payload
+from user.utils.basic import to_dict, verify_args, get_token, login_auth, get_payload, upload_file
 
 
 @csrf_exempt
@@ -25,13 +26,11 @@ def reg_user(res: request):
         if verify_args(data):
             if User.objects.filter(account=data.get('account')):
                 return JsonResponse({"code": -10, "msg": "该账号已存在！"}, json_dumps_params={'ensure_ascii': False})
-            try:
-                img = base64.b64decode(str(data.get('avatar')[0].get('content')).split('base64,')[-1])
-                img_name = f'{uuid.uuid4()}.png'
-                with open(settings.MEDIA_ROOT + f'/uploads/avatar/{img_name}', 'wb') as f:
-                    f.write(img)
-            except Exception as e:
-                return JsonResponse({'code': -10, 'msg': f'{e}'})
+            ba64_str = str(data.get('avatar')[0].get('content')).split('base64,')[-1]
+            file_type = str(data.get('avatar')[0].get('content').split(';base64')[0].split('/')[-1])
+            img_name = upload_file(ba64_str, file_type, '/uploads/avatar/')
+            if img_name is False:
+                return JsonResponse({'code': -99, 'msg': '不允许上传的文件类型！'})
             user = User()
             user.account = data.get('account')
             user.password = generate_password_hash(data.get('password'))
@@ -41,7 +40,7 @@ def reg_user(res: request):
             user_info.user_id = user
             user_info.nick_name = data.get('nickname')
             img_obj = Img()
-            img_obj.img_url = '/uploads/avatar/{}'.format(img_name)
+            img_obj.img_url = img_name
             img_obj.img_type = ImgType.objects.get(id=1)
             img_obj.save()
             user_info.avatar = img_obj
@@ -67,7 +66,8 @@ def user_login(res: request):
             try:
                 user = User.objects.get(account=data.get('account'))
                 if check_password_hash(user.password, data.get('password')):
-                    token = get_token({"data": {"account": user.account}})
+                    # 签发的token有效期是12小时
+                    token = get_token({"exp": time.time() + 60 * 60 * 12, "data": {"account": user.account}})
                     return JsonResponse({"code": 200, "msg": "登录成功", "data": {"token": token}})
                 else:
                     return JsonResponse({"code": -10, "msg": "密码或账号错误！"})

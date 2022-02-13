@@ -200,3 +200,55 @@ class UserInfo(BaseModel):
         ordering = ["create_date"]
         verbose_name = "用户信息"
         verbose_name_plural = "用户信息"
+
+
+class Friend(BaseModel):
+    """
+    好友数据模型
+    """
+    me = models.OneToOneField(
+        User,
+        related_name="me",
+        on_delete=models.CASCADE,
+        verbose_name="自己"
+    )
+    friend = models.ManyToManyField(
+        User,
+        related_name="friend",
+        verbose_name="好友"
+    )
+
+    def __str__(self):
+        return self.me.account
+
+    class Meta:
+        ordering = ["create_date"]
+        verbose_name = "好友"
+        verbose_name_plural = "好友列表"
+
+
+class FriendRequest(BaseModel):
+    """好友请求数据模型"""
+    request_user = models.ForeignKey(
+        User,
+        related_name="request_user",
+        on_delete=models.CASCADE,
+        verbose_name="请求好友"
+    )
+    add_user = models.ForeignKey(
+        User,
+        related_name="add_user",
+        on_delete=models.CASCADE,
+        verbose_name="被添加好友"
+    )
+    request_text = models.CharField(max_length=256, verbose_name="请求留言")
+    is_ok = models.BooleanField(default=False, verbose_name="是否处理")
+    expired_date = models.DateTimeField(verbose_name="过期日期")
+
+    def __str__(self):
+        return self.request_text
+
+    class Meta:
+        ordering = ["create_date"]
+        verbose_name = "好友请求"
+        verbose_name_plural = "好友请求"

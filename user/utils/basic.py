@@ -5,10 +5,13 @@ import datetime
 import json
 import base64
 import hashlib
+import uuid
 from collections.abc import Callable
 
 from django.http import request, JsonResponse
-from uis.settings import JWT_TOKEN
+from loguru import logger
+
+from uis.settings import JWT_TOKEN, MEDIA_ROOT, FILE_TYPE
 
 
 def to_dict(res: request) -> dict:
@@ -110,7 +113,7 @@ def get_token(reload: dict) -> str:
     return jwt_token.create_token().decode()
 
 
-def verify_token(key: bytes, token: str):
+def verify_token(key: bytes, token: str) -> bool:
     """
     token验证函数，验证签发的token是否是本人签发
     验证原理是逆向一遍编码的token传入相同的hash秘钥判断生成的token是否相同
@@ -127,7 +130,7 @@ def verify_token(key: bytes, token: str):
         else:
             return False
     except Exception as e:
-        print(e)
+        logger.info(e)
         return False
 
 
@@ -144,7 +147,7 @@ def get_payload(token: str) -> dict:
         return {}
 
 
-def login_auth(func: Callable):
+def login_auth(func: Callable) -> Callable:
     """
     登录验证装饰器，验证是否登录，是否有权限
     """
@@ -162,10 +165,39 @@ def login_auth(func: Callable):
             if now_time > exp_time:
                 return JsonResponse({"code": -5, "msg": "登录已过期!"})
         return result
+
     return is_login
 
 
+def upload_file(ba64_str: str, file_type: str, file_path: str) -> [str, bool]:
+    """
+    上传文件函数，需要传入已经Base64编码的字符串
+    ba64_str: Base64编码的字符串
+    file_type: 上传的文件类型
+    file_path: 上传的文件存放路径
+    return: 返回文件路径加名称或者失败的状态
+    """
+    if file_type not in FILE_TYPE:
+        return False
+    try:
+        img = base64.b64decode(ba64_str)
+        img_name = f'{uuid.uuid4()}.{file_type}'
+        with open(MEDIA_ROOT + f'{file_path}{img_name}', 'wb') as f:
+            f.write(img)
+        return f'{file_path}{img_name}'
+    except Exception as e:
+        logger.info(e)
+        return False
+
+
+@logger.catch
+def test():
+    logger.info("测试日志")
+    raise "测试错误！"
+
+
 if __name__ == "__main__":
-    cache = get_token({"data": {"name": "pink"}})
-    print(cache)
-    print(verify_token(b'pink-boy', cache))
+    # cache = get_token({"data": {"name": "pink"}})
+    # print(cache)
+    # print(verify_token(b'pink-boy', cache))
+    test()
