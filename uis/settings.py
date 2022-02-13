@@ -14,6 +14,8 @@ import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+from loguru import logger
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -53,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # 注册允许跨域中间件
+    'check_data.middleware.CheckRequest'  # 检测文件上传大小中间件
 ]
 
 ROOT_URLCONF = 'uis.urls'
@@ -119,6 +122,10 @@ USE_L10N = True
 
 USE_TZ = False
 
+
+# 设置日志记录的基本和日志文件路径
+logger.add(f"{BASE_DIR}/log/" + "stdout_{time}.log",
+           rotation="00:00", format="{time:YYYY-MM-DD at HH:mm:ss}|{level}|{message}", encoding="utf-8")
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
@@ -189,4 +196,116 @@ JWT_TOKEN = {
 }
 
 
+# 关闭服务器信息
 SIMPLEUI_HOME_INFO = False
+# 设置默认主题，指向主题css文件名。Element-ui风格
+SIMPLEUI_DEFAULT_THEME = 'e-purple-pro.css'
+SIMPLEUI_CONFIG = {
+    # 是否使用系统默认菜单。
+    'system_keep': False,
+
+    # 用于菜单排序和过滤, 不填此字段为默认排序和全部显示。 空列表[] 为全部不显示.
+    'menu_display': ['用户管理', '好友管理', '附件管理', '选项管理', '认证和权限'],
+
+    # 设置是否开启动态菜单, 默认为False. 如果开启, 则会在每次用户登陆时刷新展示菜单内容。
+    # 一般建议关闭。
+    'dynamic': False,
+    'menus': [
+        {
+            'app': 'auth',
+            'name': '权限认证',
+            'icon': 'fas fa-user-shield',
+            'models': [
+                {
+                    'name': '用户列表',
+                    'icon': 'fa fa-user',
+                    'url': 'auth/user/'
+                },
+                {
+                    'name': '用户组',
+                    'icon': 'fa fa-th-list',
+                    'url': 'auth/group/'
+                }
+            ]
+        },
+
+        {
+            'name': '用户管理',
+            'icon': 'fa fa-user',
+            'models': [
+                {
+                    'name': '用户列表',
+                    # 注意url按'/admin/应用名小写/模型名小写/'命名。
+                    'url': '/ylz/user/user/',
+                    'icon': 'fa fa-user-check'
+                },
+{
+                    'name': '用户信息',
+                    # 注意url按'/admin/应用名小写/模型名小写/'命名。
+                    'url': '/ylz/user/userinfo/',
+                    'icon': 'fas fa-user-shield'
+                },
+            ]
+        },
+
+        {
+            'name': '好友管理',
+            'icon': 'fa fa-users',
+            'models': [
+                {
+                    'name': '好友列表',
+                    # 注意url按'/admin/应用名小写/模型名小写/'命名。
+                    'url': '/ylz/user/friend/',
+                    'icon': 'fas fa-user-friends'
+                },
+{
+                    'name': '好友请求',
+                    # 注意url按'/admin/应用名小写/模型名小写/'命名。
+                    'url': '/ylz/user/friendrequest/',
+                    'icon': 'fas fa-user-plus'
+                },
+            ]
+        },
+
+        {
+            'name': '附件管理',
+            'icon': 'fas fa-folder',
+            'models': [
+                {
+                    'name': '图片列表',
+                    # 注意url按'/admin/应用名小写/模型名小写/'命名。
+                    'url': '/ylz/user/img/',
+                    'icon': 'fas fa-image'
+                },
+
+                {
+                    'name': '图片类型',
+                    # 注意url按'/admin/应用名小写/模型名小写/'命名。
+                    'url': '/ylz/user/imgtype/',
+                    'icon': 'fas fa-images'
+                },
+            ]
+        },
+
+        {
+            'name': '选项管理',
+            'icon': 'fas fa-cogs',
+            'models': [
+                {
+                    'name': '选项列表',
+                    # 注意url按'/admin/应用名小写/模型名小写/'命名。
+                    'url': '/ylz/user/option/',
+                    'icon': 'fas fa-cog'
+                },
+
+                {
+                    'name': '选项类型',
+                    # 注意url按'/admin/应用名小写/模型名小写/'命名。
+                    'url': '/ylz/user/optiontype/',
+                    'icon': 'fas fa-tools'
+                },
+            ]
+        },
+
+    ]
+}
