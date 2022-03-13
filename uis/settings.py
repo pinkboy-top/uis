@@ -124,8 +124,8 @@ USE_TZ = False
 
 
 # 设置日志记录的基本和日志文件路径
-logger.add(f"{BASE_DIR}/log/" + "stdout_{time}.log",
-           rotation="00:00", format="{time:YYYY-MM-DD at HH:mm:ss}|{level}|{message}", encoding="utf-8")
+logger.add(f"{BASE_DIR}/log/" + "stdout_{time}.log", rotation='100KB', backtrace=True, diagnose=True,
+           format="{time:YYYY-MM-DD at HH:mm:ss}|{level}|{function}|{message}", encoding="utf-8")
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
@@ -239,7 +239,7 @@ SIMPLEUI_CONFIG = {
                     'url': '/ylz/user/user/',
                     'icon': 'fa fa-user-check'
                 },
-{
+                {
                     'name': '用户信息',
                     # 注意url按'/admin/应用名小写/模型名小写/'命名。
                     'url': '/ylz/user/userinfo/',
@@ -258,7 +258,7 @@ SIMPLEUI_CONFIG = {
                     'url': '/ylz/user/friend/',
                     'icon': 'fas fa-user-friends'
                 },
-{
+                {
                     'name': '好友请求',
                     # 注意url按'/admin/应用名小写/模型名小写/'命名。
                     'url': '/ylz/user/friendrequest/',

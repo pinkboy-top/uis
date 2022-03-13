@@ -190,6 +190,18 @@ def upload_file(ba64_str: str, file_type: str, file_path: str) -> [str, bool]:
         return False
 
 
+def get_client_ip(res: request) -> str:
+    """
+    获取用户请求的ip地址
+    """
+    x_forwarded_for = res.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = res.META.get('REMOTE_ADDR')
+    return ip
+
+
 @logger.catch
 def test():
     logger.info("测试日志")
