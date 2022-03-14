@@ -31,12 +31,15 @@ def verify_args(args: dict) -> bool:
     验证前端提交的数据完整性
     args: 前端提交的数据，已经转字典
     """
-    for key in args.keys():
-        if args.get(key):
-            pass
-        else:
-            return False
-    return True
+    if args:
+        for key in args.keys():
+            if args.get(key):
+                pass
+            else:
+                return False
+        return True
+    else:
+        return False
 
 
 def to_ba64(d_str: str) -> bytes:

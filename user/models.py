@@ -212,9 +212,9 @@ class Friend(BaseModel):
         on_delete=models.CASCADE,
         verbose_name="自己"
     )
-    friend = models.ManyToManyField(
+    friends = models.ManyToManyField(
         User,
-        related_name="friend",
+        related_name="friends",
         verbose_name="好友"
     )
 
