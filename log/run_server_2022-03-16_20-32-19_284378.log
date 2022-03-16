@@ -1,0 +1,179 @@
+2022-03-16 at 20:32:23|ERROR|django.views.decorators.csrf|wrapped_view|An error has been caught in function 'wrapped_view', process 'MainProcess' (98227), thread 'Thread-1' (123145347887104):
+Traceback (most recent call last):
+
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/threading.py", line 890, in _bootstrap
+    self._bootstrap_inner()
+    │    └ <function Thread._bootstrap_inner at 0x7f84226c8050>
+    └ <Thread(Thread-1, started daemon 123145347887104)>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/threading.py", line 926, in _bootstrap_inner
+    self.run()
+    │    └ <function Thread.run at 0x7f84226c7dd0>
+    └ <Thread(Thread-1, started daemon 123145347887104)>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/threading.py", line 870, in run
+    self._target(*self._args, **self._kwargs)
+    │    │        │    │        │    └ {}
+    │    │        │    │        └ <Thread(Thread-1, started daemon 123145347887104)>
+    │    │        │    └ (<socket.socket fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 8000), raddr=('...
+    │    │        └ <Thread(Thread-1, started daemon 123145347887104)>
+    │    └ <bound method ThreadingMixIn.process_request_thread of <django.core.servers.basehttp.WSGIServer object at 0x7f8428543f50>>
+    └ <Thread(Thread-1, started daemon 123145347887104)>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/socketserver.py", line 650, in process_request_thread
+    self.finish_request(request, client_address)
+    │    │              │        └ ('127.0.0.1', 53833)
+    │    │              └ <socket.socket fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 8000), raddr=('1...
+    │    └ <function BaseServer.finish_request at 0x7f8426f9bef0>
+    └ <django.core.servers.basehttp.WSGIServer object at 0x7f8428543f50>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/socketserver.py", line 360, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    │    │                   │        │               └ <django.core.servers.basehttp.WSGIServer object at 0x7f8428543f50>
+    │    │                   │        └ ('127.0.0.1', 53833)
+    │    │                   └ <socket.socket fd=7, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 8000), raddr=('1...
+    │    └ <class 'django.core.servers.basehttp.WSGIRequestHandler'>
+    └ <django.core.servers.basehttp.WSGIServer object at 0x7f8428543f50>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/socketserver.py", line 720, in __init__
+    self.handle()
+    │    └ <function WSGIRequestHandler.handle at 0x7f84276fd680>
+    └ <django.core.servers.basehttp.WSGIRequestHandler object at 0x7f8428527ad0>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/core/servers/basehttp.py", line 176, in handle
+    self.handle_one_request()
+    │    └ <function WSGIRequestHandler.handle_one_request at 0x7f84276fd710>
+    └ <django.core.servers.basehttp.WSGIRequestHandler object at 0x7f8428527ad0>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/core/servers/basehttp.py", line 201, in handle_one_request
+    handler.run(self.server.get_app())
+    │       │   │    │      └ <function WSGIServer.get_app at 0x7f84276eb0e0>
+    │       │   │    └ <django.core.servers.basehttp.WSGIServer object at 0x7f8428543f50>
+    │       │   └ <django.core.servers.basehttp.WSGIRequestHandler object at 0x7f8428527ad0>
+    │       └ <function BaseHandler.run at 0x7f84276f5dd0>
+    └ <django.core.servers.basehttp.ServerHandler object at 0x7f84284f8050>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/wsgiref/handlers.py", line 137, in run
+    self.result = application(self.environ, self.start_response)
+    │    │        │           │    │        │    └ <function BaseHandler.start_response at 0x7f84276fa170>
+    │    │        │           │    │        └ <django.core.servers.basehttp.ServerHandler object at 0x7f84284f8050>
+    │    │        │           │    └ {'PATH': '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Applications/VMware Fusion.app/Contents/Public', '__CFBundleIdentifie...
+    │    │        │           └ <django.core.servers.basehttp.ServerHandler object at 0x7f84284f8050>
+    │    │        └ <django.contrib.staticfiles.handlers.StaticFilesHandler object at 0x7f8427702cd0>
+    │    └ None
+    └ <django.core.servers.basehttp.ServerHandler object at 0x7f84284f8050>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/contrib/staticfiles/handlers.py", line 76, in __call__
+    return self.application(environ, start_response)
+           │    │           │        └ <bound method BaseHandler.start_response of <django.core.servers.basehttp.ServerHandler object at 0x7f84284f8050>>
+           │    │           └ {'PATH': '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Applications/VMware Fusion.app/Contents/Public', '__CFBundleIdentifie...
+           │    └ <django.core.handlers.wsgi.WSGIHandler object at 0x7f8426fa97d0>
+           └ <django.contrib.staticfiles.handlers.StaticFilesHandler object at 0x7f8427702cd0>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/core/handlers/wsgi.py", line 133, in __call__
+    response = self.get_response(request)
+               │    │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               │    └ <function BaseHandler.get_response at 0x7f8427689680>
+               └ <django.core.handlers.wsgi.WSGIHandler object at 0x7f8426fa97d0>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/core/handlers/base.py", line 130, in get_response
+    response = self._middleware_chain(request)
+               │    │                 └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               │    └ <function convert_exception_to_response.<locals>.inner at 0x7f8428582c20>
+               └ <django.core.handlers.wsgi.WSGIHandler object at 0x7f8426fa97d0>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/core/handlers/exception.py", line 47, in inner
+    response = get_response(request)
+               │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               └ <django.middleware.security.SecurityMiddleware object at 0x7f842700ce10>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/utils/deprecation.py", line 117, in __call__
+    response = response or self.get_response(request)
+               │           │    │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               │           │    └ <function convert_exception_to_response.<locals>.inner at 0x7f8428500c20>
+               │           └ <django.middleware.security.SecurityMiddleware object at 0x7f842700ce10>
+               └ None
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/core/handlers/exception.py", line 47, in inner
+    response = get_response(request)
+               │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               └ <django.contrib.sessions.middleware.SessionMiddleware object at 0x7f842700ced0>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/utils/deprecation.py", line 117, in __call__
+    response = response or self.get_response(request)
+               │           │    │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               │           │    └ <function convert_exception_to_response.<locals>.inner at 0x7f8428500ef0>
+               │           └ <django.contrib.sessions.middleware.SessionMiddleware object at 0x7f842700ced0>
+               └ None
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/core/handlers/exception.py", line 47, in inner
+    response = get_response(request)
+               │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               └ <django.middleware.common.CommonMiddleware object at 0x7f842700cf90>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/utils/deprecation.py", line 117, in __call__
+    response = response or self.get_response(request)
+               │           │    │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               │           │    └ <function convert_exception_to_response.<locals>.inner at 0x7f8428500dd0>
+               │           └ <django.middleware.common.CommonMiddleware object at 0x7f842700cf90>
+               └ None
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/core/handlers/exception.py", line 47, in inner
+    response = get_response(request)
+               │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               └ <django.middleware.csrf.CsrfViewMiddleware object at 0x7f8422794a50>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/utils/deprecation.py", line 117, in __call__
+    response = response or self.get_response(request)
+               │           │    │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               │           │    └ <function convert_exception_to_response.<locals>.inner at 0x7f842857e5f0>
+               │           └ <django.middleware.csrf.CsrfViewMiddleware object at 0x7f8422794a50>
+               └ None
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/core/handlers/exception.py", line 47, in inner
+    response = get_response(request)
+               │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               └ <django.contrib.auth.middleware.AuthenticationMiddleware object at 0x7f84284d0f10>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/utils/deprecation.py", line 117, in __call__
+    response = response or self.get_response(request)
+               │           │    │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               │           │    └ <function convert_exception_to_response.<locals>.inner at 0x7f842857e290>
+               │           └ <django.contrib.auth.middleware.AuthenticationMiddleware object at 0x7f84284d0f10>
+               └ None
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/core/handlers/exception.py", line 47, in inner
+    response = get_response(request)
+               │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               └ <django.contrib.messages.middleware.MessageMiddleware object at 0x7f8428585f90>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/utils/deprecation.py", line 117, in __call__
+    response = response or self.get_response(request)
+               │           │    │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               │           │    └ <function convert_exception_to_response.<locals>.inner at 0x7f842856bef0>
+               │           └ <django.contrib.messages.middleware.MessageMiddleware object at 0x7f8428585f90>
+               └ None
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/core/handlers/exception.py", line 47, in inner
+    response = get_response(request)
+               │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               └ <corsheaders.middleware.CorsMiddleware object at 0x7f8428585ed0>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/utils/deprecation.py", line 117, in __call__
+    response = response or self.get_response(request)
+               │           │    │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               │           │    └ <function convert_exception_to_response.<locals>.inner at 0x7f842856bf80>
+               │           └ <corsheaders.middleware.CorsMiddleware object at 0x7f8428585ed0>
+               └ None
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/core/handlers/exception.py", line 47, in inner
+    response = get_response(request)
+               │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               └ <check_data.middleware.CheckRequest object at 0x7f8426865e90>
+
+  File "/Users/pink/Code/uis/check_data/middleware.py", line 15, in __call__
+    response = self.get_response(request)
+               │    │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               │    └ <function BaseHandler._get_response at 0x7f8427016680>
+               └ <check_data.middleware.CheckRequest object at 0x7f8426865e90>
+
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/core/handlers/exception.py", line 47, in inner
+    response = get_response(request)
+               │            └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               └ <bound method BaseHandler._get_response of <django.core.handlers.wsgi.WSGIHandler object at 0x7f8426fa97d0>>
+  File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/core/handlers/base.py", line 181, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               │                │         │                └ {}
+               │                │         └ ()
+               │                └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+               └ <function login_auth.<locals>.is_login at 0x7f8427a817a0>
+> File "/Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+           │          │       └ {}
+           │          └ (<WSGIRequest: POST '/api/v1/user/get_friend_list'>,)
+           └ <function login_auth.<locals>.is_login at 0x7f8427a814d0>
+
+  File "/Users/pink/Code/uis/user/utils/basic.py", line 159, in is_login
+    result = func(res)
+             │    └ <WSGIRequest: POST '/api/v1/user/get_friend_list'>
+             └ <function get_friend_list at 0x7f8427a813b0>
+
+  File "/Users/pink/Code/uis/user/views.py", line 310, in get_friend_list
+    for val in my_friend.fiends.all():
+               └ <Friend: lizi5201314>
+
+AttributeError: 'Friend' object has no attribute 'fiends'

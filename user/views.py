@@ -291,6 +291,7 @@ def confirm_add_request(res: request):
 
 
 @csrf_exempt
+@logger.catch
 @login_auth
 def get_friend_list(res: request):
     """
@@ -303,26 +304,19 @@ def get_friend_list(res: request):
     if verify_args(data):
         try:
             token = res.META.get("HTTP_AUTHORIZATION")
-            request_user = User.objects.get(account=get_payload(token).get("data").get("account"))
-            add_user = User.objects.get(account=data.get("add_user"))
-            request_text = data.get("request_text")
-            friend_request = FriendRequest.objects.filter(add_user=add_user, is_ok=False)
-            friend = Friend.objects.filter(me=request_user, friend=add_user)
-            if len(friend_request) > 0:
-                return JsonResponse({"code": -5, "msg": "请勿重复提交好友添加请求！"})
-            if len(friend) > 0:
-                return JsonResponse({"code": -5, "msg": "该用户已经是你的好友！"})
-            if request_user.pk == add_user.pk:
-                return JsonResponse({"code": -5, "msg": "不能添加自己为好友！"})
-            # 在好友请求里面添加一条对应的好友请求记录
-            add_request = FriendRequest()
-            add_request.request_user = request_user
-            add_request.add_user = add_user
-            add_request.request_text = request_text
-            # 过期时间是一个星期
-            add_request.expired_date = datetime.datetime.now() + datetime.timedelta(days=7)
-            add_request.save()
-            return JsonResponse({'code': 200, 'msg': '好友请求已发送'}, safe=False)
+            user = User.objects.get(account=get_payload(token).get("data").get("account"))
+            my_friend = Friend.objects.get(me=user)
+            result = []
+            for val in my_friend.friends.all():
+                user_info = UserInfo.objects.get(user_id=val)
+                result.append({
+                    "uid": val.uid,
+                    "account": val.account,
+                    "nick_name": user_info.nick_name,
+                    "avatar": f"http://{res.get_host()}{user_info.avatar.img_url.url}",
+                    "gender": user_info.gender.option_name
+                })
+            return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
         except ObjectDoesNotExist:
             logger.info(f"{get_client_ip(res)}: {data}")
             return JsonResponse({"code": -5, "msg": "账号不存在！"})

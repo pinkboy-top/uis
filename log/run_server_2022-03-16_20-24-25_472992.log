@@ -1,0 +1,4 @@
+2022-03-16 at 20:26:12|INFO|user.views|user_login|127.0.0.1: lizi5201314
+2022-03-16 at 20:26:15|INFO|user.views|user_login|127.0.0.1: lizi5201314
+2022-03-16 at 20:26:26|INFO|user.views|user_login|127.0.0.1: lizi5201314
+2022-03-16 at 20:27:39|INFO|user.views|confirm_add_request|127.0.0.1: {'request_id': 11, 'is_ok': 'true'}

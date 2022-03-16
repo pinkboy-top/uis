@@ -124,8 +124,8 @@ USE_TZ = False
 
 
 # 设置日志记录的基本和日志文件路径
-logger.add(f"{BASE_DIR}/log/" + "stdout_{time}.log", rotation='100KB', backtrace=True, diagnose=True,
-           format="{time:YYYY-MM-DD at HH:mm:ss}|{level}|{function}|{message}", encoding="utf-8")
+format_str = "{time:YYYY-MM-DD at HH:mm:ss}|{level}|{name}|{function}|{message}"
+logger.add(f"{BASE_DIR}/log/" + "run_server_{time}.log", rotation='100KB', format=format_str, encoding="utf-8")
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
