@@ -137,8 +137,9 @@ def search_friend(res: request):
                 user = User.objects.get(account=account)
                 user_info = UserInfo.objects.get(user_id=user.uid)
                 result = {
+                    "uid": user.uid,
                     "account": user.account,
-                    "nickname": user_info.nick_name,
+                    "nick_name": user_info.nick_name,
                     "avatar": f"http://{res.get_host()}{user_info.avatar.img_url.url}",
                     "gender": user_info.gender.option_name,
                     "summary": user_info.summary,
@@ -149,7 +150,7 @@ def search_friend(res: request):
                 return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
         except ObjectDoesNotExist:
             logger.info(f"{get_client_ip(res)}: {data}")
-            return JsonResponse({"code": 200, "msg": "账号不存在！"})
+            return JsonResponse({"code": 100, "msg": "账号不存在！"})
     else:
         logger.info(f"{get_client_ip(res)}: {data}")
         return JsonResponse({"code": -5, "msg": "没有参数！"})
@@ -169,16 +170,18 @@ def add_friend_request(res: request):
         try:
             token = res.META.get("HTTP_AUTHORIZATION")
             request_user = User.objects.get(account=get_payload(token).get("data").get("account"))
+            request_user_info = UserInfo.objects.get(user_id=request_user)
+            # logger.info(request_user_info.nick_name)
             add_user = User.objects.get(account=data.get("add_user"))
-            request_text = data.get("request_text")
-            friend_request = FriendRequest.objects.filter(add_user=add_user, is_ok=False)
+            request_text = f"{request_user_info.nick_name}请求添加你为好友"
+            friend_request = FriendRequest.objects.filter(add_user=add_user, request_user=request_user, is_ok=False)
             friend = Friend.objects.filter(me=request_user, friends=add_user)
             if len(friend_request) > 0:
-                return JsonResponse({"code": -5, "msg": "请勿重复提交好友添加请求！"})
+                return JsonResponse({"code": 100, "msg": "请勿重复提交好友添加请求！"})
             if len(friend) > 0:
-                return JsonResponse({"code": -5, "msg": "该用户已经是你的好友！"})
+                return JsonResponse({"code": 100, "msg": "该用户已经是你的好友！"})
             if request_user.pk == add_user.pk:
-                return JsonResponse({"code": -5, "msg": "不能添加自己为好友！"})
+                return JsonResponse({"code": 100, "msg": "不能添加自己为好友！"})
             # 在好友请求里面添加一条对应的好友请求记录
             add_request = FriendRequest()
             add_request.request_user = request_user
@@ -213,9 +216,13 @@ def get_friend_request(res: request):
         return JsonResponse({"code": 200, "msg": "no request！"})
     result = []
     for val in friend_request:
+        user_info = UserInfo.objects.get(user_id=val.request_user)
         result.append({
             "request_id": val.pk,
             "request_user": val.request_user.uid,
+            "nick_name": user_info.nick_name,
+            "avatar": f"http://{res.get_host()}{user_info.avatar.img_url.url}",
+            "summary": user_info.summary,
             "add_user": val.add_user.uid,
             "request_text": val.request_text,
             "is_ok": val.is_ok,
@@ -240,30 +247,33 @@ def confirm_add_request(res: request):
             request_id = data.get("request_id")
             is_ok = data.get("is_ok")
             user = User.objects.get(account=get_payload(token).get("data").get("account"))
+            # logger.info(request_id)
             # 取到对应的好友请求
             friend_request = FriendRequest.objects.get(pk=request_id)
-            if is_ok != "true":
+            if is_ok is False:
                 friend_request.is_ok = True
                 friend_request.save()
-                return JsonResponse({'code': 200, 'msg': '抱歉！该用户已拒绝您的请求。'}, safe=False)
+                return JsonResponse({'code': 200, 'msg': '您已拒绝该用户的好友添加请求。'}, safe=False)
             my_friend = Friend.objects.filter(me=user)
+            # logger.info(my_friend)
             # 第一次添加好友需要创建好友列表
             if len(my_friend) == 0:
                 my_friend = Friend()
                 my_friend.me = user
                 # 多对多先保存再绑定
                 my_friend.save()
-                my_friend.friends.add(friend_request.add_user)
+                my_friend.friends.add(friend_request.request_user)
                 friend_request.is_ok = True
                 friend_request.save()
-                return JsonResponse({'code': 200, 'msg': '恭喜，该用户已经同意您的好友添加请求。'}, safe=False)
+                return JsonResponse({'code': 200, 'msg': '您已经同意该用户的好友添加请求。'}, safe=False)
             else:
                 my_friend[0].me = user
+                my_friend[0].friends.add(friend_request.request_user)
                 my_friend[0].save()
-                my_friend[0].friends.add(friend_request.add_user)
                 friend_request.is_ok = True
                 friend_request.save()
-                return JsonResponse({'code': 200, 'msg': '恭喜，该用户已经同意您的好友添加请求。'}, safe=False)
+                # logger.info(friend_request.request_user)
+                return JsonResponse({'code': 200, 'msg': '您已经同意该用户的好友添加请求。'}, safe=False)
         except ObjectDoesNotExist:
             logger.info(f"{get_client_ip(res)}: {data}")
             return JsonResponse({"code": -5, "msg": "账号不存在！"})
@@ -273,7 +283,7 @@ def confirm_add_request(res: request):
 
 
 @csrf_exempt
-@logger.catch
+# @logger.catch
 @login_auth
 def get_friend_list(res: request):
     """
@@ -285,13 +295,28 @@ def get_friend_list(res: request):
 
     token = res.META.get("HTTP_AUTHORIZATION")
     user = User.objects.get(account=get_payload(token).get("data").get("account"))
-    try:
-        my_friend = Friend.objects.get(me=user)
-    except ObjectDoesNotExist:
+
+    my_friend = Friend.objects.filter(me=user)
+    if len(my_friend) == 0:
         logger.info(f"{get_client_ip(res)}: 没有好友")
+        # 第一次需要创建好友列表
+        my_friend = Friend()
+        my_friend.me = user
+        my_friend.save()
+        # 找到所有好友列表里面存在我自己的数据全部更新到自己的好友模型
+        friends = Friend.objects.filter(friends=user)
+        for friend in friends:
+            my_friend.friends.add(friend.me)
+            my_friend[0].save()
         return JsonResponse({"code": 100, "msg": "no friend!"})
+
+    # 每次获取好友列表都将添加的好友进行更新
+    friends = Friend.objects.filter(friends=user)
+    for friend in friends:
+        my_friend[0].friends.add(friend.me)
+        my_friend[0].save()
     result = []
-    for val in my_friend.friends.all():
+    for val in my_friend[0].friends.all():
         user_info = UserInfo.objects.get(user_id=val)
         result.append({
             "uid": val.uid,
