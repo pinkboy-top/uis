@@ -19,6 +19,7 @@ def to_dict(res: request) -> dict:
     返回处理成字典的request.body数据
     res: 传入一个django的请求对象
     """
+    # logger.info(res.body)
     if res.body:
         str_data = res.body.decode('UTF-8')
         return json.loads(str_data)

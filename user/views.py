@@ -102,31 +102,22 @@ def get_user_info(res: request):
     if res.method != "POST":
         logger.info(f"{get_client_ip(res)}: 非法请求！")
         return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    data = to_dict(res)
-    if verify_args(data):
-        try:
-            token = res.META.get("HTTP_AUTHORIZATION")
-            if token:
-                # 获取token中的数据
-                user = User.objects.get(account=get_payload(token).get("data").get("account"))
-                user_info = UserInfo.objects.get(user_id=user.uid)
-                result = {
-                    "account": user.account,
-                    "nickname": user_info.nick_name,
-                    "avatar": f"http://{res.get_host()}{user_info.avatar.img_url.url}",
-                    "gender": user_info.gender.option_name,
-                    "summary": user_info.summary,
-                    "birthday": user_info.birthday.strftime("%y-%m-%d"),
-                    "create_date": user_info.create_date.strftime("%y-%m-%d")
-                }
-                logger.info(f"{get_client_ip(res)}: {user_info.nick_name}")
-                return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
-        except ObjectDoesNotExist:
-            logger.info(f"{get_client_ip(res)}: {data}")
-            return JsonResponse({"code": -5, "msg": "账号不存在！"})
-    else:
-        logger.info(f"{get_client_ip(res)}: {data}")
-        return JsonResponse({"code": -5, "msg": "没有参数！"})
+    token = res.META.get("HTTP_AUTHORIZATION")
+
+    # 获取token中的数据
+    user = User.objects.get(account=get_payload(token).get("data").get("account"))
+    user_info = UserInfo.objects.get(user_id=user.uid)
+    result = {
+        "account": user.account,
+        "nickname": user_info.nick_name,
+        "avatar": f"http://{res.get_host()}{user_info.avatar.img_url.url}",
+        "gender": user_info.gender.option_name,
+        "summary": user_info.summary,
+        "birthday": user_info.birthday.strftime("%y-%m-%d"),
+        "create_date": user_info.create_date.strftime("%y-%m-%d")
+    }
+    logger.info(f"{get_client_ip(res)}: {user_info.nick_name}")
+    return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
 
 
 @csrf_exempt
@@ -158,7 +149,7 @@ def search_friend(res: request):
                 return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
         except ObjectDoesNotExist:
             logger.info(f"{get_client_ip(res)}: {data}")
-            return JsonResponse({"code": -5, "msg": "账号不存在！"})
+            return JsonResponse({"code": 200, "msg": "账号不存在！"})
     else:
         logger.info(f"{get_client_ip(res)}: {data}")
         return JsonResponse({"code": -5, "msg": "没有参数！"})
@@ -214,32 +205,23 @@ def get_friend_request(res: request):
     if res.method != 'POST':
         logger.info(f"{get_client_ip(res)}: 非法请求！")
         return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    data = to_dict(res)
-    if verify_args(data):
-        try:
-            token = res.META.get("HTTP_AUTHORIZATION")
-            add_user = User.objects.get(account=get_payload(token).get("data").get("account"))
-            now_date = datetime.datetime.now()
-            friend_request = FriendRequest.objects.filter(add_user=add_user, is_ok=False, expired_date__gte=now_date)
-            if len(friend_request) == 0:
-                return JsonResponse({"code": -5, "msg": "no request！"})
-            result = []
-            for val in friend_request:
-                result.append({
-                    "request_id": val.pk,
-                    "request_user": val.request_user.uid,
-                    "add_user": val.add_user.uid,
-                    "request_text": val.request_text,
-                    "is_ok": val.is_ok,
-                    "expired_date": val.expired_date
-                })
-            return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
-        except ObjectDoesNotExist:
-            logger.info(f"{get_client_ip(res)}: {data}")
-            return JsonResponse({"code": -5, "msg": "账号不存在！"})
-    else:
-        logger.info(f"{get_client_ip(res)}: {data}")
-        return JsonResponse({"code": -5, "msg": "没有参数！"})
+    token = res.META.get("HTTP_AUTHORIZATION")
+    add_user = User.objects.get(account=get_payload(token).get("data").get("account"))
+    now_date = datetime.datetime.now()
+    friend_request = FriendRequest.objects.filter(add_user=add_user, is_ok=False, expired_date__gte=now_date)
+    if len(friend_request) == 0:
+        return JsonResponse({"code": 200, "msg": "no request！"})
+    result = []
+    for val in friend_request:
+        result.append({
+            "request_id": val.pk,
+            "request_user": val.request_user.uid,
+            "add_user": val.add_user.uid,
+            "request_text": val.request_text,
+            "is_ok": val.is_ok,
+            "expired_date": val.expired_date
+        })
+    return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
 
 
 @csrf_exempt
@@ -300,26 +282,23 @@ def get_friend_list(res: request):
     if res.method != 'POST':
         logger.info(f"{get_client_ip(res)}: 非法请求！")
         return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    data = to_dict(res)
-    if verify_args(data):
-        try:
-            token = res.META.get("HTTP_AUTHORIZATION")
-            user = User.objects.get(account=get_payload(token).get("data").get("account"))
-            my_friend = Friend.objects.get(me=user)
-            result = []
-            for val in my_friend.friends.all():
-                user_info = UserInfo.objects.get(user_id=val)
-                result.append({
-                    "uid": val.uid,
-                    "account": val.account,
-                    "nick_name": user_info.nick_name,
-                    "avatar": f"http://{res.get_host()}{user_info.avatar.img_url.url}",
-                    "gender": user_info.gender.option_name
-                })
-            return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
-        except ObjectDoesNotExist:
-            logger.info(f"{get_client_ip(res)}: {data}")
-            return JsonResponse({"code": -5, "msg": "账号不存在！"})
-    else:
-        logger.info(f"{get_client_ip(res)}: {data}")
-        return JsonResponse({"code": -5, "msg": "没有参数！"})
+
+    token = res.META.get("HTTP_AUTHORIZATION")
+    user = User.objects.get(account=get_payload(token).get("data").get("account"))
+    try:
+        my_friend = Friend.objects.get(me=user)
+    except ObjectDoesNotExist:
+        logger.info(f"{get_client_ip(res)}: 没有好友")
+        return JsonResponse({"code": 100, "msg": "no friend!"})
+    result = []
+    for val in my_friend.friends.all():
+        user_info = UserInfo.objects.get(user_id=val)
+        result.append({
+            "uid": val.uid,
+            "account": val.account,
+            "nick_name": user_info.nick_name,
+            "avatar": f"http://{res.get_host()}{user_info.avatar.img_url.url}",
+            "summary": user_info.summary,
+            "gender": user_info.gender.option_name
+        })
+    return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
