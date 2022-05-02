@@ -289,6 +289,10 @@ class File(BaseModel):
     文件数据模型
     """
     file_name = models.CharField(max_length=256, verbose_name="文件名称")
+    file_content = models.FileField(
+        upload_to='uploads/%Y/%m/%d/',
+        verbose_name="文件内容"
+    )
     file_type = models.ForeignKey(
         Option,
         on_delete=models.CASCADE,

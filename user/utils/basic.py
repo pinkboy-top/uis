@@ -1,6 +1,7 @@
 """
 封装一些常用的基本工具
 """
+import os
 import datetime
 import json
 import base64
@@ -173,7 +174,7 @@ def login_auth(func: Callable) -> Callable:
     return is_login
 
 
-def upload_file(ba64_str: str, file_type: str, file_path: str) -> [str, bool]:
+def upload_file(ba64_str: str, f_type: str, f_path: str) -> [str, bool]:
     """
     上传文件函数，需要传入已经Base64编码的字符串
     ba64_str: Base64编码的字符串
@@ -181,14 +182,14 @@ def upload_file(ba64_str: str, file_type: str, file_path: str) -> [str, bool]:
     file_path: 上传的文件存放路径
     return: 返回文件路径加名称或者失败的状态
     """
-    if file_type not in FILE_TYPE:
+    if f_type not in FILE_TYPE:
         return False
     try:
         img = base64.b64decode(ba64_str)
-        img_name = f'{uuid.uuid4()}.{file_type}'
-        with open(MEDIA_ROOT + f'{file_path}{img_name}', 'wb') as f:
+        img_name = f'{uuid.uuid4()}.{f_type}'
+        with open(MEDIA_ROOT + f'{f_path}{img_name}', 'wb') as f:
             f.write(img)
-        return f'{file_path}{img_name}'
+        return f'{f_path}{img_name}'
     except Exception as e:
         logger.info(e)
         return False
@@ -204,6 +205,13 @@ def get_client_ip(res: request) -> str:
     else:
         ip = res.META.get('REMOTE_ADDR')
     return ip
+
+
+def file_path():
+    """
+    返回文件存储路径
+    """
+    return os.path.join(MEDIA_ROOT, 'files')
 
 
 @logger.catch
