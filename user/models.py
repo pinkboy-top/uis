@@ -252,3 +252,91 @@ class FriendRequest(BaseModel):
         ordering = ["create_date"]
         verbose_name = "好友请求"
         verbose_name_plural = "好友请求"
+
+
+class News(BaseModel):
+    """
+    动态消息数据模型
+    """
+    title = models.CharField(max_length=512, null=True, verbose_name="标题")
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="作者"
+    )
+    friend_view_list = models.ManyToManyField(
+        User,
+        related_name="friend_view_list",
+        verbose_name="好友查看列表"
+    )
+    friend_like_list = models.ManyToManyField(
+        User,
+        related_name="friend_like_list",
+        verbose_name="好友点赞列表"
+    )
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        ordering = ["create_date"]
+        verbose_name = "动态消息"
+        verbose_name_plural = "动态消息数据模型"
+
+
+class File(BaseModel):
+    """
+    文件数据模型
+    """
+    file_name = models.CharField(max_length=256, verbose_name="文件名称")
+    file_type = models.ForeignKey(
+        Option,
+        on_delete=models.CASCADE,
+        verbose_name="文件类型"
+    )
+    related_news = models.ForeignKey(
+        News,
+        on_delete=models.CASCADE,
+        verbose_name="关联动态消息"
+    )
+
+    def __str__(self):
+        return self.file_name
+
+    class Meta:
+        ordering = ["create_date"]
+        verbose_name = "文件"
+        verbose_name_plural = "文件数据"
+
+
+class Comment(BaseModel):
+    """
+    评论模型
+    评论留言
+    好友评论
+    回复评论
+    """
+    comment_news = models.ForeignKey(
+        News,
+        on_delete=models.CASCADE,
+        verbose_name="关联动态消息"
+    )
+    content = models.CharField(max_length=256, verbose_name="回复内容")
+    comment_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="comment_user",
+        verbose_name="评论用户")
+    aims_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="aims_user",
+        verbose_name="目标用户"
+    )
+
+    def __str__(self):
+        return self.content
+
+    class Meta:
+        verbose_name = "用户评论"
+
