@@ -5,6 +5,7 @@ import os
 import datetime
 import time
 
+from django.db.models import Q
 from django.http import JsonResponse, request
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
@@ -344,8 +345,9 @@ def post_news(res: request):
     title = data.get("title")
     files = data.get("files")
     friend_view_list = data.get("friend_view_list")
-    if title and files is None:
-        return JsonResponse({"code": 200, "msg": "你要发点啥！"})
+    if title is None:
+        if files is None:
+            return JsonResponse({"code": 200, "msg": "你要发点啥！"})
 
     # 创建发布的动态
     if title and files:
@@ -383,7 +385,7 @@ def post_news(res: request):
                 file_obj.save()
             except Exception as e:
                 return JsonResponse({'code': -10, 'msg': '{}'.format(e)})
-        return JsonResponse({'code': 200, 'msg': 'security'})
+        return JsonResponse({'code': 200, 'msg': '发送成功'})
     # 只发标题的动态
     if title:
         new = News()
@@ -398,12 +400,13 @@ def post_news(res: request):
         else:
             # 默认只有自己能够查看
             new.friend_view_list.add(user)
-        return JsonResponse({'code': 200, 'msg': 'security'})
+        return JsonResponse({'code': 200, 'msg': '发送成功'})
     # 只发图片或视频的动态
     if files:
         new = News()
-        new.title = ""
+        new.title = "None"
         new.author = user
+        new.save()
         # 如果设置了允许查看的朋友就按设置的访问列表
         if friend_view_list:
             for u in friend_view_list:
@@ -412,7 +415,6 @@ def post_news(res: request):
         else:
             # 默认只有自己能够查看
             new.friend_view_list.add(user)
-        new.save()
         # 保存发布的文件
         for f in files:
             try:
@@ -434,9 +436,9 @@ def post_news(res: request):
                 file_obj.save()
             except Exception as e:
                 return JsonResponse({'code': -10, 'msg': '{}'.format(e)})
-        return JsonResponse({'code': 200, 'msg': 'security'})
+        return JsonResponse({'code': 200, 'msg': '发送成功'})
 
-    return JsonResponse({'code': 200, 'msg': 'security'})
+    return JsonResponse({'code': 200, 'msg': '发送成功'})
 
 
 @csrf_exempt
@@ -450,4 +452,22 @@ def get_news(res: request):
         return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
     token = res.META.get("HTTP_AUTHORIZATION")
     user = User.objects.get(account=get_payload(token).get("data").get("account"))
-    return JsonResponse({'code': 200, 'msg': 'security'}, safe=False)
+    # 查询所有关于自己的动态包括朋友发送的动态
+    query = (Q(friend_view_list__uid=user.uid) | Q(author=user))
+    news = News.objects.filter(query).distinct().order_by('-create_date')
+    if len(news) == 0:
+        return JsonResponse({'code': 200, 'msg': 'security', 'data': []}, safe=False)
+    result = []
+    for new in news:
+        files = File.objects.filter(related_news=new)
+        user_info = UserInfo.objects.get(user_id=new.author)
+        result.append({
+            "title": new.title,
+            "author": new.author.account,
+            "nickname": user_info.nick_name,
+            "avatar": f"http://{res.get_host()}{user_info.avatar.img_url.url}",
+            "files": [f"http://{res.get_host()}{f.file_content.url}" for f in files if f],
+            "pk": new.pk,
+            "create_date": new.create_date.strftime('%Y-%m-%d %H:%M:%S')
+        })
+    return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)

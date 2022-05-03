@@ -276,7 +276,10 @@ class News(BaseModel):
     )
 
     def __str__(self):
-        return self.title
+        if self.title:
+            return self.title
+        else:
+            return self.pk
 
     class Meta:
         ordering = ["create_date"]

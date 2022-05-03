@@ -190,9 +190,10 @@ def upload_file(ba64_str: str, f_type: str, f_path: str) -> [str, bool]:
         img = base64.b64decode(ba64_str)
         img_name = f'{uuid.uuid4()}.{f_type}'
         # 文件夹不存在就创建
-        if not os.path.exists(os.path.join(MEDIA_ROOT, f_path)):
-            os.makedirs(os.path.join(MEDIA_ROOT, f_path))
-        with open(os.path.join(MEDIA_ROOT, f_path) + img_name, 'wb') as f:
+        to_path = rf"{MEDIA_ROOT + f_path}"
+        if not os.path.exists(to_path):
+            os.makedirs(to_path)
+        with open(to_path + img_name, 'wb') as f:
             f.write(img)
         return f'{f_path}{img_name}'
     except Exception as e:
