@@ -1,6 +1,7 @@
 """
 用户模块基本功能
 """
+import os
 import datetime
 import time
 
@@ -9,8 +10,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from uis.settings import logger
-from user.models import User, UserInfo, Option, Img, ImgType, Friend, FriendRequest
+from uis.settings import logger, MEDIA_ROOT
+from user.models import User, UserInfo, Option, Img, ImgType, Friend, FriendRequest, News, File
 from user.utils.basic import to_dict, verify_args, get_token, login_auth, get_payload, upload_file, get_client_ip
 
 
@@ -342,12 +343,100 @@ def post_news(res: request):
         return JsonResponse({"code": -5, "msg": "没有参数！"})
     title = data.get("title")
     files = data.get("files")
-    for f in files:
-        try:
-            print(f)
-            return JsonResponse({'code': 200, 'msg': 'security', 'data': title}, safe=False)
-        except Exception as e:
-            return JsonResponse({'code': -10, 'msg': '{}'.format(e)})
+    friend_view_list = data.get("friend_view_list")
+    if title and files is None:
+        return JsonResponse({"code": 200, "msg": "你要发点啥！"})
+
+    # 创建发布的动态
+    if title and files:
+        new = News()
+        new.title = title
+        new.author = user
+        new.save()
+        # 如果设置了允许查看的朋友就按设置的访问列表
+        if friend_view_list:
+            for u in friend_view_list:
+                friend = User.objects.get(uid=u)
+                new.friend_view_list.add(friend)
+        else:
+            # 默认只有自己能够查看
+            new.friend_view_list.add(user)
+
+        # 保存发布的文件
+        for f in files:
+            try:
+                ba64_str = str(f.get('content')).split('base64,')[-1]
+                file_type = str(f.get('content').split(';base64')[0].split('/')[-1])
+                new_date = datetime.datetime.now()
+                file_path = os.path.join('/uploads/', f'{new_date.year}/', f'{new_date.month}/', f'{new_date.day}/')
+                file_name = upload_file(ba64_str, file_type, file_path)
+                if file_name is False:
+                    return JsonResponse({'code': -99, 'msg': '不允许上传的文件类型！'})
+
+                file_obj = File()
+                file_obj.file_name = file_name
+                file_obj.file_content = file_name
+                file_79 = Option.objects.get(id=79)
+                file_80 = Option.objects.get(id=80)
+                file_obj.file_type = file_79 if file_type in ['jpeg', 'jpg', 'png', 'gif'] else file_80
+                file_obj.related_news = new
+                file_obj.save()
+            except Exception as e:
+                return JsonResponse({'code': -10, 'msg': '{}'.format(e)})
+        return JsonResponse({'code': 200, 'msg': 'security'})
+    # 只发标题的动态
+    if title:
+        new = News()
+        new.title = title
+        new.author = user
+        new.save()
+        # 如果设置了允许查看的朋友就按设置的访问列表
+        if friend_view_list:
+            for u in friend_view_list:
+                friend = User.objects.get(uid=u)
+                new.friend_view_list.add(friend)
+        else:
+            # 默认只有自己能够查看
+            new.friend_view_list.add(user)
+        return JsonResponse({'code': 200, 'msg': 'security'})
+    # 只发图片或视频的动态
+    if files:
+        new = News()
+        new.title = ""
+        new.author = user
+        # 如果设置了允许查看的朋友就按设置的访问列表
+        if friend_view_list:
+            for u in friend_view_list:
+                friend = User.objects.get(uid=u)
+                new.friend_view_list.add(friend)
+        else:
+            # 默认只有自己能够查看
+            new.friend_view_list.add(user)
+        new.save()
+        # 保存发布的文件
+        for f in files:
+            try:
+                ba64_str = str(f.get('content')).split('base64,')[-1]
+                file_type = str(f.get('content').split(';base64')[0].split('/')[-1])
+                new_date = datetime.datetime.now()
+                file_path = os.path.join('/uploads/', f'{new_date.year}/', f'{new_date.month}/', f'{new_date.day}/')
+                file_name = upload_file(ba64_str, file_type, file_path)
+                if file_name is False:
+                    return JsonResponse({'code': -99, 'msg': '不允许上传的文件类型！'})
+
+                file_obj = File()
+                file_obj.file_name = file_name
+                file_obj.file_content = file_name
+                file_79 = Option.objects.get(id=79)
+                file_80 = Option.objects.get(id=80)
+                file_obj.file_type = file_79 if file_type in ['jpeg', 'jpg', 'png', 'gif'] else file_80
+                file_obj.related_news = new
+                file_obj.save()
+            except Exception as e:
+                return JsonResponse({'code': -10, 'msg': '{}'.format(e)})
+        return JsonResponse({'code': 200, 'msg': 'security'})
+
+    return JsonResponse({'code': 200, 'msg': 'security'})
 
 
 @csrf_exempt

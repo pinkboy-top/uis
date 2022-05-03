@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from user.models import User, UserInfo, OptionType, Option, ImgType, Img, Friend, FriendRequest
+from user.models import User, UserInfo, OptionType, Option, ImgType, Img, Friend, FriendRequest, News, File, Comment
 
 # 设置站点后台标题
 admin.site.site_header = "荔枝"
@@ -15,3 +15,6 @@ admin.site.register(ImgType)
 admin.site.register(Img)
 admin.site.register(Friend)
 admin.site.register(FriendRequest)
+admin.site.register(News)
+admin.site.register(File)
+admin.site.register(Comment)

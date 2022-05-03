@@ -205,7 +205,7 @@ SIMPLEUI_CONFIG = {
     'system_keep': False,
 
     # 用于菜单排序和过滤, 不填此字段为默认排序和全部显示。 空列表[] 为全部不显示.
-    'menu_display': ['用户管理', '好友管理', '附件管理', '选项管理', '认证和权限'],
+    'menu_display': ['用户管理', '好友管理', '动态管理', '文件管理', '评论管理', '附件管理', '选项管理', '认证和权限'],
 
     # 设置是否开启动态菜单, 默认为False. 如果开启, 则会在每次用户登陆时刷新展示菜单内容。
     # 一般建议关闭。
@@ -264,6 +264,43 @@ SIMPLEUI_CONFIG = {
                     'url': '/ylz/user/friendrequest/',
                     'icon': 'fas fa-user-plus'
                 },
+            ]
+        },
+
+        {
+            'name': '动态管理',
+            'icon': 'fa fa-users',
+            'models': [
+                {
+                    'name': '动态列表',
+                    # 注意url按'/admin/应用名小写/模型名小写/'命名。
+                    'url': '/ylz/user/news/',
+                    'icon': 'fas fa-user-friends'
+                }
+            ]
+        },
+        {
+            'name': '文件管理',
+            'icon': 'fa fa-users',
+            'models': [
+                {
+                    'name': '文件列表',
+                    # 注意url按'/admin/应用名小写/模型名小写/'命名。
+                    'url': '/ylz/user/file/',
+                    'icon': 'fas fa-user-friends'
+                }
+            ]
+        },
+        {
+            'name': '评论管理',
+            'icon': 'fa fa-users',
+            'models': [
+                {
+                    'name': '评论列表',
+                    # 注意url按'/admin/应用名小写/模型名小写/'命名。
+                    'url': '/ylz/user/comment/',
+                    'icon': 'fas fa-user-friends'
+                }
             ]
         },
 

@@ -157,8 +157,8 @@ def login_auth(func: Callable) -> Callable:
     登录验证装饰器，验证是否登录，是否有权限
     """
 
-    def is_login(res: request):
-        result = func(res)
+    def is_login(res: request) -> [Callable, request]:
+        result = func
         token = res.META.get("HTTP_AUTHORIZATION")
         if token is None:
             return JsonResponse({"code": -1, "msg": "未登录!"})
@@ -169,7 +169,9 @@ def login_auth(func: Callable) -> Callable:
             exp_time = datetime.datetime.fromtimestamp(flag_time)
             if now_time > exp_time:
                 return JsonResponse({"code": -5, "msg": "登录已过期!"})
-        return result
+        else:
+            return JsonResponse({"code": -5, "msg": "token错误!"})
+        return result(res)
 
     return is_login
 
@@ -187,7 +189,10 @@ def upload_file(ba64_str: str, f_type: str, f_path: str) -> [str, bool]:
     try:
         img = base64.b64decode(ba64_str)
         img_name = f'{uuid.uuid4()}.{f_type}'
-        with open(MEDIA_ROOT + f'{f_path}{img_name}', 'wb') as f:
+        # 文件夹不存在就创建
+        if not os.path.exists(os.path.join(MEDIA_ROOT, f_path)):
+            os.makedirs(os.path.join(MEDIA_ROOT, f_path))
+        with open(os.path.join(MEDIA_ROOT, f_path) + img_name, 'wb') as f:
             f.write(img)
         return f'{f_path}{img_name}'
     except Exception as e:
