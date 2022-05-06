@@ -1,0 +1,3 @@
+2022-05-06 at 04:21:28|INFO|user.views|user_login|192.168.6.193: 5201314
+2022-05-06 at 04:21:33|INFO|user.views|get_user_info|192.168.6.193: 测试账号
+2022-05-06 at 04:21:45|INFO|user.views|search_friend|192.168.6.193: {'account': '342432'}

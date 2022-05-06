@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-$0m8kf!grqtt^528=hxxz+czs*#fuhw0dq1%15lz@6n+l00@uk'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -44,6 +44,9 @@ INSTALLED_APPS = [
     'user',
     'corsheaders',
     'rest_framework',
+    'werkzeug_debugger_runserver',  # 开启https需要的服务
+    'django_extensions',  # 开启https需要的服务
+
 ]
 
 MIDDLEWARE = [
