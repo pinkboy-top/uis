@@ -347,3 +347,23 @@ class Comment(BaseModel):
     class Meta:
         verbose_name = "用户评论"
 
+
+class Info(BaseModel):
+    """
+    聊天消息模型
+    """
+    content = models.CharField(max_length=512, verbose_name="消息内容")
+    content_type = models.ForeignKey(
+        Option,
+        on_delete=models.CASCADE,
+        verbose_name="消息类型"
+    )
+
+
+class Message(BaseModel):
+    """
+    聊天数据模型
+    """
+    u_msg = models.ManyToManyField(
+        User
+    )
