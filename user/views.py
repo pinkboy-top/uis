@@ -12,7 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from uis.settings import logger, MEDIA_ROOT
-from user.models import User, UserInfo, Option, Img, ImgType, Friend, FriendRequest, News, File
+from user.models import User, UserInfo, Option, Img, ImgType, Friend, FriendRequest, News, File, Comment
 from user.utils.basic import to_dict, verify_args, get_token, login_auth, get_payload, upload_file, get_client_ip
 
 
@@ -345,9 +345,8 @@ def post_news(res: request):
     title = data.get("title")
     files = data.get("files")
     friend_view_list = data.get("friend_view_list")
-    if title is None:
-        if files is None:
-            return JsonResponse({"code": 200, "msg": "你要发点啥！"})
+    if title is None and files is None:
+        return JsonResponse({"code": 200, "msg": "你要发点啥！"})
 
     # 创建发布的动态
     if title and files:
@@ -471,3 +470,99 @@ def get_news(res: request):
             "create_date": new.create_date.strftime('%Y-%m-%d %H:%M:%S')
         })
     return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
+
+
+@csrf_exempt
+@login_auth
+def like(res: request):
+    """
+    对动态进行点赞
+    """
+    if res.method != 'POST':
+        logger.info(f"{get_client_ip(res)}: 非法请求！")
+        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
+    token = res.META.get("HTTP_AUTHORIZATION")
+    user = User.objects.get(account=get_payload(token).get("data").get("account"))
+    data = to_dict(res)
+    if verify_args(data) is False:
+        logger.info(f"{get_client_ip(res)}: {data}")
+        return JsonResponse({"code": -5, "msg": "没有参数！"})
+    # 拿到对应的动态
+    news_id = data.get("news_id")
+    news = News.objects.filter(pk=news_id)
+    news.friend_like_list.add(user)
+    news.save()
+    return JsonResponse({'code': 200, 'msg': 'security'}, safe=False)
+
+
+@csrf_exempt
+@login_auth
+def unlike(res: request):
+    """
+    对动态取消点赞
+    """
+    if res.method != 'POST':
+        logger.info(f"{get_client_ip(res)}: 非法请求！")
+        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
+    token = res.META.get("HTTP_AUTHORIZATION")
+    user = User.objects.get(account=get_payload(token).get("data").get("account"))
+    data = to_dict(res)
+    # 拿到对应的动态
+    news_id = data.get("news_id")
+    news = News.objects.filter(pk=news_id)
+    news.friend_like_list.remove(user)
+    news.save()
+    return JsonResponse({'code': 200, 'msg': 'security'}, safe=False)
+
+
+@csrf_exempt
+@login_auth
+def add_comment(res: request):
+    """
+    对动态进行评论
+    """
+    if res.method != 'POST':
+        logger.info(f"{get_client_ip(res)}: 非法请求！")
+        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
+    token = res.META.get("HTTP_AUTHORIZATION")
+    user = User.objects.get(account=get_payload(token).get("data").get("account"))
+    data = to_dict(res)
+    # 拿到对应的动态
+    news_id = data.get("news_id")
+    aims_user = data.get("aims_user")
+    content = data.get("content")
+    if news_id and aims_user and content:
+        news = News.objects.filter(pk=news_id)
+        aims_user = User.objects.filter(uid=aims_user)
+        # 创建对应动态的评论
+        comment = Comment()
+        comment.comment_news = news
+        comment.comment_user = user
+        comment.aims_user = aims_user
+        comment.content = content
+        comment.save()
+        return JsonResponse({'code': 200, 'msg': 'security'}, safe=False)
+    else:
+        return JsonResponse({'code': 100, 'msg': 'no data!'}, safe=False)
+
+
+@csrf_exempt
+@login_auth
+def delete_comment(res: request):
+    """
+    删除评论
+    """
+    if res.method != 'POST':
+        logger.info(f"{get_client_ip(res)}: 非法请求！")
+        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
+    # token = res.META.get("HTTP_AUTHORIZATION")
+    # user = User.objects.get(account=get_payload(token).get("data").get("account"))
+    data = to_dict(res)
+    # 拿到对应的评论
+    comment_id = data.get("comment_id")
+    if comment_id:
+        comment = Comment.objects.filter(pk=comment_id)
+        comment.delete()
+        return JsonResponse({'code': 200, 'msg': 'security'}, safe=False)
+    else:
+        return JsonResponse({'code': 100, 'msg': 'no data!'}, safe=False)
