@@ -566,3 +566,18 @@ def delete_comment(res: request):
         return JsonResponse({'code': 200, 'msg': 'security'}, safe=False)
     else:
         return JsonResponse({'code': 100, 'msg': 'no data!'}, safe=False)
+
+
+@csrf_exempt
+@login_auth
+def send_msg(res: request):
+    """
+    发送消息
+    """
+    if res.method != 'POST':
+        logger.info(f"{get_client_ip(res)}: 非法请求！")
+        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
+    token = res.META.get("HTTP_AUTHORIZATION")
+    user = User.objects.get(account=get_payload(token).get("data").get("account"))
+    data = to_dict(res)
+    return JsonResponse({'code': 200, 'msg': 'security'}, safe=False)

@@ -348,7 +348,39 @@ class Comment(BaseModel):
         verbose_name = "用户评论"
 
 
-class Info(BaseModel):
+class Chat(BaseModel):
+    """
+    聊天数据模型
+    """
+    send_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="send_user",
+        verbose_name="发送用户")
+    accept_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="accept_user",
+        verbose_name="接收用户"
+    )
+
+    class Meta:
+        verbose_name = "用户聊天"
+
+
+class Group(BaseModel):
+    """
+    聊天群组数据模型
+    """
+    users = models.ManyToManyField(
+        User
+    )
+
+    class Meta:
+        verbose_name = "用户群组"
+
+
+class Message(BaseModel):
     """
     聊天消息模型
     """
@@ -358,12 +390,17 @@ class Info(BaseModel):
         on_delete=models.CASCADE,
         verbose_name="消息类型"
     )
-
-
-class Message(BaseModel):
-    """
-    聊天数据模型
-    """
-    u_msg = models.ManyToManyField(
-        User
+    msg_chat = models.ForeignKey(
+        Chat,
+        on_delete=models.CASCADE,
+        verbose_name="聊天"
     )
+
+    def __str__(self):
+        return self.content
+
+    class Meta:
+        verbose_name = "聊天信息"
+
+
+
