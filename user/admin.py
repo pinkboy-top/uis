@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 from user.models import User, UserInfo, OptionType, Option, ImgType, Img, Friend, FriendRequest, News, File, Comment, \
-Region, Address, Message, Chat, Group
+    Region, Address, Message, Chat, Group
 
 # 设置站点后台标题
 admin.site.site_header = "荔枝"

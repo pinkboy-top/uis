@@ -1,19 +1,20 @@
 """
 用户模块基本功能
 """
-import os
 import datetime
+import os
 import time
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http import JsonResponse, request
 from django.views.decorators.csrf import csrf_exempt
-from django.core.exceptions import ObjectDoesNotExist
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from uis.settings import logger, MEDIA_ROOT
-from user.models import User, UserInfo, Option, Img, ImgType, Friend, FriendRequest, News, File, Comment
-from user.utils.basic import to_dict, verify_args, get_token, login_auth, get_payload, upload_file, get_client_ip
+from uis.settings import logger
+from user.models import User, UserInfo, Option, Img, ImgType, Friend, FriendRequest, News, File, Comment, Message, Chat
+from user.utils.basic import to_dict, verify_args, get_token, login_auth, get_payload, upload_file, get_client_ip, \
+    get_user_data
 
 
 @csrf_exempt
@@ -99,18 +100,13 @@ def get_user_info(res: request):
     """
     获取用户详情
     """
-    if res.method != "POST":
-        logger.info(f"{get_client_ip(res)}: 非法请求！")
-        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    token = res.META.get("HTTP_AUTHORIZATION")
-
-    # 获取token中的数据
-    user = User.objects.get(account=get_payload(token).get("data").get("account"))
+    user_data = get_user_data(res)
+    user = user_data["user"]
     user_info = UserInfo.objects.get(user_id=user.uid)
     result = {
         "account": user.account,
         "nickname": user_info.nick_name,
-        "avatar": f"http://{res.get_host()}{user_info.avatar.img_url.url}",
+        "avatar": f"{user_info.avatar.img_url.url}",
         "gender": user_info.gender.option_name,
         "summary": user_info.summary,
         "birthday": user_info.birthday.strftime("%y-%m-%d"),
@@ -126,10 +122,8 @@ def search_friend(res: request):
     """
     搜索好友
     """
-    if res.method != 'POST':
-        logger.info(f"{get_client_ip(res)}: 非法请求！")
-        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    data = to_dict(res)
+    user_data = get_user_data(res)
+    data = user_data["data"]
     if verify_args(data) is False:
         logger.info(f"{get_client_ip(res)}: {data}")
         return JsonResponse({"code": -5, "msg": "没有参数！"})
@@ -142,7 +136,7 @@ def search_friend(res: request):
                 "uid": user.uid,
                 "account": user.account,
                 "nick_name": user_info.nick_name,
-                "avatar": f"http://{res.get_host()}{user_info.avatar.img_url.url}",
+                "avatar": f"{user_info.avatar.img_url.url}",
                 "gender": user_info.gender.option_name,
                 "summary": user_info.summary,
                 "birthday": user_info.birthday.strftime("%y-%m-%d"),
@@ -161,10 +155,8 @@ def add_friend_request(res: request):
     """
     添加好友请求
     """
-    if res.method != 'POST':
-        logger.info(f"{get_client_ip(res)}: 非法请求！")
-        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    data = to_dict(res)
+    user_data = get_user_data(res)
+    data = user_data["data"]
     if verify_args(data) is False:
         logger.info(f"{get_client_ip(res)}: {data}")
         return JsonResponse({"code": -5, "msg": "没有参数！"})
@@ -203,11 +195,8 @@ def get_friend_request(res: request):
     """
     获取好友添加请求
     """
-    if res.method != 'POST':
-        logger.info(f"{get_client_ip(res)}: 非法请求！")
-        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    token = res.META.get("HTTP_AUTHORIZATION")
-    add_user = User.objects.get(account=get_payload(token).get("data").get("account"))
+    user_data = get_user_data(res)
+    add_user = user_data["user"]
     now_date = datetime.datetime.now()
     friend_request = FriendRequest.objects.filter(add_user=add_user, is_ok=False, expired_date__gte=now_date)
     if len(friend_request) == 0:
@@ -219,7 +208,7 @@ def get_friend_request(res: request):
             "request_id": val.pk,
             "request_user": val.request_user.uid,
             "nick_name": user_info.nick_name,
-            "avatar": f"http://{res.get_host()}{user_info.avatar.img_url.url}",
+            "avatar": f"{user_info.avatar.img_url.url}",
             "summary": user_info.summary,
             "add_user": val.add_user.uid,
             "request_text": val.request_text,
@@ -235,10 +224,8 @@ def confirm_add_request(res: request):
     """
     确认添加好友请求同意或者拒绝好友请求
     """
-    if res.method != 'POST':
-        logger.info(f"{get_client_ip(res)}: 非法请求！")
-        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    data = to_dict(res)
+    user_data = get_user_data(res)
+    data = user_data["data"]
     if verify_args(data) is False:
         logger.info(f"{get_client_ip(res)}: {data}")
         return JsonResponse({"code": -5, "msg": "没有参数！"})
@@ -286,12 +273,8 @@ def get_friend_list(res: request):
     """
     获取好友列表
     """
-    if res.method != 'POST':
-        logger.info(f"{get_client_ip(res)}: 非法请求！")
-        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-
-    token = res.META.get("HTTP_AUTHORIZATION")
-    user = User.objects.get(account=get_payload(token).get("data").get("account"))
+    user_data = get_user_data(res)
+    user = user_data["user"]
 
     my_friend = Friend.objects.filter(me=user)
     if len(my_friend) == 0:
@@ -319,7 +302,7 @@ def get_friend_list(res: request):
             "uid": val.uid,
             "account": val.account,
             "nick_name": user_info.nick_name,
-            "avatar": f"http://{res.get_host()}{user_info.avatar.img_url.url}",
+            "avatar": f"{user_info.avatar.img_url.url}",
             "summary": user_info.summary,
             "gender": user_info.gender.option_name
         })
@@ -332,13 +315,10 @@ def post_news(res: request):
     """
     发送动态信息
     """
-    if res.method != 'POST':
-        logger.info(f"{get_client_ip(res)}: 非法请求！")
-        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    token = res.META.get("HTTP_AUTHORIZATION")
-    user = User.objects.get(account=get_payload(token).get("data").get("account"))
+    user_data = get_user_data(res)
+    user = user_data["user"]
+    data = user_data["data"]
 
-    data = to_dict(res)
     if verify_args(data) is False:
         logger.info(f"{get_client_ip(res)}: {data}")
         return JsonResponse({"code": -5, "msg": "没有参数！"})
@@ -446,11 +426,8 @@ def get_news(res: request):
     """
     获取动态信息
     """
-    if res.method != 'POST':
-        logger.info(f"{get_client_ip(res)}: 非法请求！")
-        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    token = res.META.get("HTTP_AUTHORIZATION")
-    user = User.objects.get(account=get_payload(token).get("data").get("account"))
+    user_data = get_user_data(res)
+    user = user_data["user"]
     # 查询所有关于自己的动态包括朋友发送的动态
     query = (Q(friend_view_list__uid=user.uid) | Q(author=user))
     news = News.objects.filter(query).distinct().order_by('-create_date')
@@ -464,8 +441,8 @@ def get_news(res: request):
             "title": new.title,
             "author": new.author.account,
             "nickname": user_info.nick_name,
-            "avatar": f"http://{res.get_host()}{user_info.avatar.img_url.url}",
-            "files": [f"http://{res.get_host()}{f.file_content.url}" for f in files if f],
+            "avatar": f"{user_info.avatar.img_url.url}",
+            "files": [f"{f.file_content.url}" for f in files if f],
             "pk": new.pk,
             "create_date": new.create_date.strftime('%Y-%m-%d %H:%M:%S')
         })
@@ -478,12 +455,9 @@ def like(res: request):
     """
     对动态进行点赞
     """
-    if res.method != 'POST':
-        logger.info(f"{get_client_ip(res)}: 非法请求！")
-        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    token = res.META.get("HTTP_AUTHORIZATION")
-    user = User.objects.get(account=get_payload(token).get("data").get("account"))
-    data = to_dict(res)
+    user_data = get_user_data(res)
+    user = user_data["user"]
+    data = user_data["data"]
     if verify_args(data) is False:
         logger.info(f"{get_client_ip(res)}: {data}")
         return JsonResponse({"code": -5, "msg": "没有参数！"})
@@ -501,12 +475,9 @@ def unlike(res: request):
     """
     对动态取消点赞
     """
-    if res.method != 'POST':
-        logger.info(f"{get_client_ip(res)}: 非法请求！")
-        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    token = res.META.get("HTTP_AUTHORIZATION")
-    user = User.objects.get(account=get_payload(token).get("data").get("account"))
-    data = to_dict(res)
+    user_data = get_user_data(res)
+    data = user_data["data"]
+    user = user_data["user"]
     # 拿到对应的动态
     news_id = data.get("news_id")
     news = News.objects.filter(pk=news_id)
@@ -521,12 +492,10 @@ def add_comment(res: request):
     """
     对动态进行评论
     """
-    if res.method != 'POST':
-        logger.info(f"{get_client_ip(res)}: 非法请求！")
-        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    token = res.META.get("HTTP_AUTHORIZATION")
-    user = User.objects.get(account=get_payload(token).get("data").get("account"))
-    data = to_dict(res)
+    user_data = get_user_data(res)
+    data = user_data["data"]
+    user = user_data["user"]
+
     # 拿到对应的动态
     news_id = data.get("news_id")
     aims_user = data.get("aims_user")
@@ -552,12 +521,8 @@ def delete_comment(res: request):
     """
     删除评论
     """
-    if res.method != 'POST':
-        logger.info(f"{get_client_ip(res)}: 非法请求！")
-        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    # token = res.META.get("HTTP_AUTHORIZATION")
-    # user = User.objects.get(account=get_payload(token).get("data").get("account"))
-    data = to_dict(res)
+    user_data = get_user_data(res)
+    data = user_data["data"]
     # 拿到对应的评论
     comment_id = data.get("comment_id")
     if comment_id:
@@ -581,3 +546,62 @@ def send_msg(res: request):
     user = User.objects.get(account=get_payload(token).get("data").get("account"))
     data = to_dict(res)
     return JsonResponse({'code': 200, 'msg': 'security'}, safe=False)
+
+
+@csrf_exempt
+@login_auth
+def get_msg_list(res: request):
+    """
+    获取用户消息列表
+    """
+    user_data = get_user_data(res)
+    user = user_data["user"]
+
+    query = (Q(send_user=user) | Q(accept_user=user))
+    chat = Chat.objects.filter(query).distinct().order_by('-create_date')
+
+    if chat:
+        result = []
+        for item in chat:
+            send_user = UserInfo.objects.get(user_id=item.send_user)
+            accept_user = UserInfo.objects.get(user_id=item.accept_user)
+            result.append({
+                "chat_id":  item.id,
+                "send_user_avatar": send_user.avatar.img_url.url,
+                "accept_user_avatar": accept_user.avatar.img_url.url,
+                "accept_user_nick_name": accept_user.nick_name,
+                "send_user_nick_name": send_user.nick_name,
+                "accept_user_id": accept_user.user_id.uid,
+                "send_user_id": send_user.user_id.uid,
+                "send_user_account": send_user.user_id.account,
+                "accept_user_account": accept_user.user_id.account
+            })
+        return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
+    return JsonResponse({'code': 200, 'msg': 'No Data!'}, safe=False)
+
+
+@csrf_exempt
+@login_auth
+def add_msg_list(res: request):
+    """
+    创建消息列表
+    """
+    user_data = get_user_data(res)
+    user = user_data["user"]
+    data = user_data["data"]
+
+    query = (Q(send_user=user) | Q(accept_user=user))
+    chat = Chat.objects.filter(query)
+
+    if chat:
+        result = []
+        for item in chat:
+            send_user = UserInfo.objects.get(pk=item.send_user.id)
+            accept_user = UserInfo.objects.get(pk=item.accept_user.id)
+            result.append({
+                "chat_id":  item.id,
+                "send_user_avatar": send_user.avatar.img_url.url,
+                "accept_user_avatar": accept_user.avatar.img_url.url
+            })
+        return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
+    return JsonResponse({'code': 200, 'msg': 'No Data!'}, safe=False)

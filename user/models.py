@@ -364,8 +364,11 @@ class Chat(BaseModel):
         verbose_name="接收用户"
     )
 
+    def __str__(self):
+        return "{}和{}的聊天".format(self.send_user.account, self.accept_user.account)
+
     class Meta:
-        verbose_name = "用户聊天"
+        verbose_name = "聊天"
 
 
 class Group(BaseModel):
@@ -373,11 +376,12 @@ class Group(BaseModel):
     聊天群组数据模型
     """
     users = models.ManyToManyField(
-        User
+        User,
+        verbose_name="群成员"
     )
 
     class Meta:
-        verbose_name = "用户群组"
+        verbose_name = "群聊"
 
 
 class Message(BaseModel):
@@ -390,6 +394,7 @@ class Message(BaseModel):
         on_delete=models.CASCADE,
         verbose_name="消息类型"
     )
+    is_read = models.BooleanField(default=False, verbose_name="是否已读")
     msg_chat = models.ForeignKey(
         Chat,
         on_delete=models.CASCADE,

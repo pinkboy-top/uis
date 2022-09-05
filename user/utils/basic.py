@@ -13,6 +13,7 @@ from django.http import request, JsonResponse
 from loguru import logger
 
 from uis.settings import JWT_TOKEN, MEDIA_ROOT, FILE_TYPE
+from user.models import User
 
 
 def to_dict(res: request) -> dict:
@@ -211,6 +212,23 @@ def get_client_ip(res: request) -> str:
     else:
         ip = res.META.get('REMOTE_ADDR')
     return ip
+
+
+def get_user_data(res: request) -> [dict, str]:
+    """
+    获取用户数据
+    """
+    if res.method != 'POST':
+        logger.info(f"{get_client_ip(res)}: 非法请求！")
+        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
+    token = res.META.get("HTTP_AUTHORIZATION")
+    user = User.objects.get(account=get_payload(token).get("data").get("account"))
+    data = to_dict(res)
+    result = {
+        "user": user,
+        "data": data
+    }
+    return result
 
 
 def file_path():
