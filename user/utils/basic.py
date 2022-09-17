@@ -7,13 +7,14 @@ import json
 import base64
 import hashlib
 import uuid
+from asgiref.sync import sync_to_async
 from collections.abc import Callable
 
 from django.http import request, JsonResponse
 from loguru import logger
 
 from uis.settings import JWT_TOKEN, MEDIA_ROOT, FILE_TYPE
-from user.models import User
+from user.models import User, UserInfo, Chat, Message, Option
 
 
 def to_dict(res: request) -> dict:
@@ -236,6 +237,58 @@ def file_path():
     返回文件存储路径
     """
     return os.path.join(MEDIA_ROOT, 'files')
+
+
+@sync_to_async
+def save_msg(msg: str, chat_id: int, is_read=False) -> bool:
+    """
+    保存消息
+    """
+    msg_obj = Message()
+    option = Option.objects.filter(option_name="文本信息")
+    chat_id = Chat.objects.filter(pk=chat_id)
+
+    msg_obj.content = msg
+    msg_obj.content_type = option[0]
+    msg_obj.msg_chat = chat_id[0]
+    msg_obj.is_read = is_read
+
+    msg_obj.save()
+
+    return True
+
+
+@sync_to_async
+def get_msg(chat_id: int) -> list:
+    """
+    获取消息
+    """
+    chat = Chat.objects.filter(pk=chat_id)
+    message = Message.objects.filter(msg_chat=chat_id, is_read=False)
+
+    if message:
+        result = []
+        send_user = UserInfo.objects.get(user_id=chat.send_user)
+        accept_user = UserInfo.objects.get(user_id=chat.accept_user)
+
+        for item in message:
+            result.append({
+                "msg": item.content,
+                "chat_id": chat.id,
+                "send_user_avatar": send_user.avatar.img_url.url,
+                "accept_user_avatar": accept_user.avatar.img_url.url,
+                "accept_user_nick_name": accept_user.nick_name,
+                "send_user_nick_name": send_user.nick_name,
+                "accept_user_id": accept_user.user_id.uid,
+                "send_user_id": send_user.user_id.uid,
+                "send_user_account": send_user.user_id.account,
+                "accept_user_account": accept_user.user_id.account
+            })
+
+            # 将消息更新为已读
+            item.is_read = True
+            item.save()
+        return result
 
 
 @logger.catch

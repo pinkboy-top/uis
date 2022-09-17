@@ -535,17 +535,30 @@ def delete_comment(res: request):
 
 @csrf_exempt
 @login_auth
-def send_msg(res: request):
+def get_chat_info(res: request):
     """
-    发送消息
+    获取聊天详情
     """
-    if res.method != 'POST':
-        logger.info(f"{get_client_ip(res)}: 非法请求！")
-        return JsonResponse({"data": {"code": -100, "msg": f"NO {res.method} METHOD!"}})
-    token = res.META.get("HTTP_AUTHORIZATION")
-    user = User.objects.get(account=get_payload(token).get("data").get("account"))
-    data = to_dict(res)
-    return JsonResponse({'code': 200, 'msg': 'security'}, safe=False)
+    user_data = get_user_data(res)
+    data = user_data["data"]
+
+    chat = Chat.objects.filter(pk=data.get("chat_id"))
+
+    if chat:
+        result = []
+        send_user = UserInfo.objects.get(user_id=chat[0].send_user)
+        accept_user = UserInfo.objects.get(user_id=chat[0].accept_user)
+        result.append({
+            "send_user_avatar": send_user.avatar.img_url.url,
+            "accept_user_avatar": accept_user.avatar.img_url.url,
+            "accept_user_nick_name": accept_user.nick_name,
+            "send_user_nick_name": send_user.nick_name,
+            "accept_user_id": accept_user.user_id.uid,
+            "send_user_id": send_user.user_id.uid,
+            "send_user_account": send_user.user_id.account,
+            "accept_user_account": accept_user.user_id.account
+        })
+        return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
 
 
 @csrf_exempt
