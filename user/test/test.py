@@ -1,6 +1,7 @@
 import threading
 import queue
 import time
+import datetime
 
 import requests
 
@@ -59,20 +60,24 @@ def start():
 
 
 if __name__ == '__main__':
-    start_time = time.time()
-    t = threading.Thread(target=start)
-    t1 = threading.Thread(target=start)
-    t2 = threading.Thread(target=start)
-    t3 = threading.Thread(target=start)
+    # start_time = time.time()
+    # t = threading.Thread(target=start)
+    # t1 = threading.Thread(target=start)
+    # t2 = threading.Thread(target=start)
+    # t3 = threading.Thread(target=start)
+    #
+    # t.start()
+    # t1.start()
+    # t2.start()
+    # t3.start()
+    #
+    # t.join()
+    # t1.join()
+    # t2.join()
+    # t3.join()
+    # print(result)
+    # print(time.time() - start_time)
+    start_date = datetime.date(2022, 9, 19)
+    end_date = datetime.date(2022, 12, 10)
 
-    t.start()
-    t1.start()
-    t2.start()
-    t3.start()
-
-    t.join()
-    t1.join()
-    t2.join()
-    t3.join()
-    print(result)
-    print(time.time() - start_time)
+    print(end_date - start_date)

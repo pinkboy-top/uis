@@ -240,7 +240,7 @@ def file_path():
 
 
 @sync_to_async
-def save_msg(msg: str, chat_id: int, is_read=False) -> bool:
+def save_msg(msg: str, bind_uid: str, chat_id: int, is_read=False) -> bool:
     """
     保存消息
     """
@@ -250,6 +250,7 @@ def save_msg(msg: str, chat_id: int, is_read=False) -> bool:
 
     msg_obj.content = msg
     msg_obj.content_type = option[0]
+    msg_obj.bind_user = User.objects.get(uid=bind_uid)
     msg_obj.msg_chat = chat_id[0]
     msg_obj.is_read = is_read
 

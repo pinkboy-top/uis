@@ -16,7 +16,7 @@ django.setup()
 
 
 from uis.settings import logger
-from user.utils.basic import verify_token, save_msg, get_msg, get_payload
+from user.utils.basic import verify_token, save_msg, get_payload
 
 # 保存用户登录状态
 login_status = []
@@ -40,6 +40,7 @@ async def recv_msg(websocket):
 
     # 将account和socket放到登录信息
     account = get_payload(token).get("data").get("account")
+    print(account)
     if account not in [x.get("account") for x in login_status]:
         login_status.append({"account": account, "socket_obj": websocket})
     else:
@@ -52,42 +53,43 @@ async def recv_msg(websocket):
     # try:
         async for message in websocket:
 
-            # print(message)
+            print(message)
             res = json.loads(message)
 
             # 检查接收用户是否登录，没有登录就放到消息队列里面，登录了就发送给对应的用户
             chat_id = res.get("chat_id")
-            to_user = res.get("to_user")
-            send_user = res.get("send_user")
+            uid = res.get("uid")
+            post_user_avatar = res.get("post_user_avatar")
+            to_user_account = res.get("to_user_account")
+            bind_user_uid = res.get("bind_user_uid")
             login_ids = [x.get("account") for x in login_status]
             msg = res.get("msg")
             now_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            # 用户打开页面的时候将历史信息发送
-            open_page = res.get("open_page")
-            if open_page:
-                history_msg = await get_msg(chat_id)
-                await websocket.send(json.dumps(history_msg))
 
             # 将退出用户的状态删除
             exit_page = res.get("exit_page")
             if exit_page:
                 for index, item in enumerate(login_status):
-                    if item.get("account") == send_user:
+                    if item.get("account") == account:
                         login_status.pop(index)
                         break
                 print(f"用户:{account}下线")
+                logger.info(f"用户:{account}下线")
                 continue
 
-            if to_user in login_ids and send_user in login_ids:
+            print(account, to_user_account)
+            if account in login_ids and to_user_account in login_ids:
                 # 将对应的消息发送给对应的用户
                 print("都在线")
-                socket_obj = [x.get("socket_obj") for x in login_status if x.get("account") == to_user][0]
+                await save_msg(msg, uid, chat_id, is_read=True)
+                socket_obj = [x.get("socket_obj") for x in login_status if x.get("account") == to_user_account][0]
+
+                send_data = {"bind_user_uid": bind_user_uid, "bind_user_avatar": post_user_avatar, "msg": msg, "send_date": now_date}
                 await socket_obj.send(
-                    json.dumps([{"to_user": to_user, "send_user": send_user, "msg": msg, "send_date": now_date}]))
-            if msg:
+                    json.dumps([send_data]))
+            else:
                 # 如果用户不在线就先将消息存到队列，等上线后再发送
-                await save_msg(msg, chat_id)
+                await save_msg(msg, uid, chat_id)
 
     # except Exception as e:
     #     logger.error("websocket异常{}".format(e))

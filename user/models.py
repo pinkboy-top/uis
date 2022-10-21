@@ -395,6 +395,11 @@ class Message(BaseModel):
         verbose_name="消息类型"
     )
     is_read = models.BooleanField(default=False, verbose_name="是否已读")
+    bind_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="绑定用户"
+    )
     msg_chat = models.ForeignKey(
         Chat,
         on_delete=models.CASCADE,

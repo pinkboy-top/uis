@@ -535,34 +535,6 @@ def delete_comment(res: request):
 
 @csrf_exempt
 @login_auth
-def get_chat_info(res: request):
-    """
-    获取聊天详情
-    """
-    user_data = get_user_data(res)
-    data = user_data["data"]
-
-    chat = Chat.objects.filter(pk=data.get("chat_id"))
-
-    if chat:
-        result = []
-        send_user = UserInfo.objects.get(user_id=chat[0].send_user)
-        accept_user = UserInfo.objects.get(user_id=chat[0].accept_user)
-        result.append({
-            "send_user_avatar": send_user.avatar.img_url.url,
-            "accept_user_avatar": accept_user.avatar.img_url.url,
-            "accept_user_nick_name": accept_user.nick_name,
-            "send_user_nick_name": send_user.nick_name,
-            "accept_user_id": accept_user.user_id.uid,
-            "send_user_id": send_user.user_id.uid,
-            "send_user_account": send_user.user_id.account,
-            "accept_user_account": accept_user.user_id.account
-        })
-        return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
-
-
-@csrf_exempt
-@login_auth
 def get_msg_list(res: request):
     """
     获取用户消息列表
@@ -580,6 +552,7 @@ def get_msg_list(res: request):
             accept_user = UserInfo.objects.get(user_id=item.accept_user)
             result.append({
                 "chat_id":  item.id,
+                "uid": user.uid,
                 "send_user_avatar": send_user.avatar.img_url.url,
                 "accept_user_avatar": accept_user.avatar.img_url.url,
                 "accept_user_nick_name": accept_user.nick_name,
@@ -595,26 +568,54 @@ def get_msg_list(res: request):
 
 @csrf_exempt
 @login_auth
-def add_msg_list(res: request):
+def get_chat_info(res: request):
     """
-    创建消息列表
+    获取聊天详情
     """
     user_data = get_user_data(res)
-    user = user_data["user"]
     data = user_data["data"]
+    user = user_data["user"]
 
-    query = (Q(send_user=user) | Q(accept_user=user))
-    chat = Chat.objects.filter(query)
+    chat = Chat.objects.filter(pk=data.get("chat_id"))
 
     if chat:
         result = []
-        for item in chat:
-            send_user = UserInfo.objects.get(pk=item.send_user.id)
-            accept_user = UserInfo.objects.get(pk=item.accept_user.id)
+        send_user = UserInfo.objects.get(user_id=chat[0].send_user)
+        accept_user = UserInfo.objects.get(user_id=chat[0].accept_user)
+        result.append({
+            "uid": user.uid,
+            "send_user_avatar": send_user.avatar.img_url.url,
+            "accept_user_avatar": accept_user.avatar.img_url.url,
+            "accept_user_nick_name": accept_user.nick_name,
+            "send_user_nick_name": send_user.nick_name,
+            "accept_user_id": accept_user.user_id.uid,
+            "send_user_id": send_user.user_id.uid,
+            "send_user_account": send_user.user_id.account,
+            "accept_user_account": accept_user.user_id.account
+        })
+        return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
+
+
+@csrf_exempt
+@login_auth
+def get_msg_info(res: request):
+    """
+    获取消息
+    """
+    user_data = get_user_data(res)
+    data = user_data["data"]
+
+    message = Message.objects.filter(msg_chat=data.get("chat_id"))
+
+    if message:
+        result = []
+        for item in message:
+            bind_user = UserInfo.objects.get(user_id=item.bind_user)
             result.append({
                 "chat_id":  item.id,
-                "send_user_avatar": send_user.avatar.img_url.url,
-                "accept_user_avatar": accept_user.avatar.img_url.url
+                "msg_content": item.content,
+                "bind_user_avatar": bind_user.avatar.img_url.url,
+                "bind_user_uid": bind_user.user_id.uid
             })
         return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
-    return JsonResponse({'code': 200, 'msg': 'No Data!'}, safe=False)
+    return JsonResponse({'code': 100, 'msg': 'No Data!'}, safe=False)
