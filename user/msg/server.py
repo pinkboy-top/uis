@@ -40,7 +40,7 @@ async def recv_msg(websocket):
 
     # 将account和socket放到登录信息
     account = get_payload(token).get("data").get("account")
-    print(account)
+    logger.info(f"用户:{account}上线")
     if account not in [x.get("account") for x in login_status]:
         login_status.append({"account": account, "socket_obj": websocket})
     else:
@@ -53,15 +53,20 @@ async def recv_msg(websocket):
     # try:
         async for message in websocket:
 
-            print(message)
+            logger.info(message)
             res = json.loads(message)
 
-            # 检查接收用户是否登录，没有登录就放到消息队列里面，登录了就发送给对应的用户
+            # 对应的聊天ID
             chat_id = res.get("chat_id")
+            # 发送信息的用户ID
             uid = res.get("uid")
+            # 发送信息的用户头像
             post_user_avatar = res.get("post_user_avatar")
+            # 接收用户的账号
             to_user_account = res.get("to_user_account")
+            # 信息绑定的用户
             bind_user_uid = res.get("bind_user_uid")
+
             login_ids = [x.get("account") for x in login_status]
             msg = res.get("msg")
             now_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -73,14 +78,12 @@ async def recv_msg(websocket):
                     if item.get("account") == account:
                         login_status.pop(index)
                         break
-                print(f"用户:{account}下线")
                 logger.info(f"用户:{account}下线")
                 continue
 
-            print(account, to_user_account)
             if account in login_ids and to_user_account in login_ids:
-                # 将对应的消息发送给对应的用户
-                print("都在线")
+                # 把信息发送给接收用户
+                logger.info(f"在线用户:{account}==={to_user_account}")
                 await save_msg(msg, uid, chat_id, is_read=True)
                 socket_obj = [x.get("socket_obj") for x in login_status if x.get("account") == to_user_account][0]
 
