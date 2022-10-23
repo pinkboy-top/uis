@@ -1,6 +1,0 @@
-2022-10-22 at 23:29:07|INFO|user.views|get_user_info|127.0.0.1: 和平精英
-2022-10-22 at 23:29:28|INFO|user.views|get_user_info|127.0.0.1: 测试账号
-2022-10-22 at 23:30:03|INFO|user.views|user_login|127.0.0.1: 5201314
-2022-10-22 at 23:30:51|INFO|user.views|get_user_info|127.0.0.1: 测试账号
-2022-10-22 at 23:31:10|INFO|user.views|user_login|127.0.0.1: 666666
-2022-10-22 at 23:31:16|INFO|user.views|get_user_info|127.0.0.1: 和平精英

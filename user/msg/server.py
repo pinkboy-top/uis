@@ -3,7 +3,6 @@ import django
 import asyncio
 import datetime
 import json
-import queue
 import sys
 
 from websockets import serve
