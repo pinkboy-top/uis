@@ -2,7 +2,7 @@ from django.urls import path
 
 from user.views import reg_user, user_login, home, get_user_info, search_friend, add_friend_request,\
     get_friend_request, confirm_add_request, get_friend_list, post_news, get_news, like, unlike, add_comment,\
-    delete_comment, get_msg_list, get_chat_info, get_msg_info
+    delete_comment, get_msg_list, get_chat_info, get_msg_info, create_chat, get_friend_info
 
 urlpatterns = [
     path('user/register', reg_user, name="用户注册"),
@@ -22,5 +22,7 @@ urlpatterns = [
     path('user/delete_comment', delete_comment, name="动态评论删除"),
     path('user/get_msg_list', get_msg_list, name="获取消息列表"),
     path('user/get_chat_info', get_chat_info, name="获取聊天详情"),
-    path('user/get_msg_info', get_msg_info, name="获取消息详情")
+    path('user/get_msg_info', get_msg_info, name="获取消息详情"),
+    path('user/create_chat', create_chat, name="创建聊天"),
+    path('user/get_friend_info', get_friend_info, name="获取好友详情")
 ]

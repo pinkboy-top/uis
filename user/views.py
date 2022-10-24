@@ -551,7 +551,7 @@ def get_msg_list(res: request):
             send_user = UserInfo.objects.get(user_id=item.send_user)
             accept_user = UserInfo.objects.get(user_id=item.accept_user)
             result.append({
-                "chat_id":  item.id,
+                "chat_id": item.id,
                 "uid": user.uid,
                 "send_user_avatar": send_user.avatar.img_url.url,
                 "accept_user_avatar": accept_user.avatar.img_url.url,
@@ -612,10 +612,68 @@ def get_msg_info(res: request):
         for item in message:
             bind_user = UserInfo.objects.get(user_id=item.bind_user)
             result.append({
-                "chat_id":  item.id,
+                "chat_id": item.id,
                 "msg_content": item.content,
                 "bind_user_avatar": bind_user.avatar.img_url.url,
                 "bind_user_uid": bind_user.user_id.uid
             })
         return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
     return JsonResponse({'code': 100, 'msg': 'No Data!'}, safe=False)
+
+
+@csrf_exempt
+@login_auth
+def create_chat(res: request):
+    """
+    创建聊天
+    """
+    user_data = get_user_data(res)
+    data = user_data["data"]
+    user = user_data["user"]
+
+    to_user_account = data.get("to_user_account")
+
+    if to_user_account:
+        to_user = User.objects.filter(account=to_user_account)[0]
+
+        query = (Q(send_user=to_user) | Q(accept_user=to_user) | Q(accept_user=user) | Q(accept_user=user))
+        chat = Chat.objects.filter(query).distinct().order_by('-create_date')
+
+        if chat:
+
+            for item in chat:
+                if item.accept_user.uid == to_user.uid or item.send_user.uid == to_user.uid:
+                    return JsonResponse({'code': 200, 'msg': 'security', 'chat_id': item.pk})
+
+        chat = Chat()
+        chat.send_user = user
+        chat.accept_user = to_user
+        chat.save()
+
+        return JsonResponse({'code': 200, 'msg': 'security', 'chat_id': chat.pk})
+
+
+@csrf_exempt
+@login_auth
+def get_friend_info(res: request):
+    """
+    获取好友详情
+    """
+    user_data = get_user_data(res)
+    data = user_data["data"]
+    friend_uid = data.get("friend_uid")
+
+    if friend_uid:
+        friend_info = UserInfo.objects.get(user_id=friend_uid)
+        result = {
+            "account": friend_info.user_id.account,
+            "nickname": friend_info.nick_name,
+            "avatar": f"{friend_info.avatar.img_url.url}",
+            "gender": friend_info.gender.option_name,
+            "summary": friend_info.summary,
+            "birthday": friend_info.birthday.strftime("%y-%m-%d"),
+            "create_date": friend_info.create_date.strftime("%y-%m-%d")
+        }
+        logger.info(f"{get_client_ip(res)}: {friend_info.nick_name}")
+        return JsonResponse({'code': 200, 'msg': 'security', 'data': result}, safe=False)
+

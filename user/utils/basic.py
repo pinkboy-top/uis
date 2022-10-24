@@ -39,8 +39,6 @@ def verify_args(args: dict) -> bool:
         for key in args.keys():
             if args.get(key) is None:
                 return False
-            else:
-                pass
         return True
     else:
         return False
