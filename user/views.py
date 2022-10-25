@@ -47,10 +47,10 @@ def reg_user(res: request):
     user_info.nick_name = data.get('nickname')
     img_obj = Img()
     img_obj.img_url = img_name
-    img_obj.img_type = ImgType.objects.get(id=1)
+    img_obj.img_type = ImgType.objects.filter(type_name="头像")[0]
     img_obj.save()
     user_info.avatar = img_obj
-    user_info.gender = Option.objects.get(id=3) if data.get('gender') == "male" else Option.objects.get(id=4)
+    user_info.gender = Option.objects.filter(option_name="男")[0] if data.get('gender') == "male" else Option.objects.filter(option_name="女")[0]
     user_info.birthday = data.get("birth_time")
     user_info.summary = data.get("signature")
     user_info.save()
@@ -357,9 +357,9 @@ def post_news(res: request):
                 file_obj = File()
                 file_obj.file_name = file_name
                 file_obj.file_content = file_name
-                file_79 = Option.objects.get(id=79)
-                file_80 = Option.objects.get(id=80)
-                file_obj.file_type = file_79 if file_type in ['jpeg', 'jpg', 'png', 'gif'] else file_80
+                file_img = Option.objects.filter(option_name="图片")[0]
+                file_video = Option.objects.filter(option_name="视频")[0]
+                file_obj.file_type = file_img if file_type in ['jpeg', 'jpg', 'png', 'gif'] else file_video
                 file_obj.related_news = new
                 file_obj.save()
             except Exception as e:
@@ -408,9 +408,9 @@ def post_news(res: request):
                 file_obj = File()
                 file_obj.file_name = file_name
                 file_obj.file_content = file_name
-                file_79 = Option.objects.get(id=79)
-                file_80 = Option.objects.get(id=80)
-                file_obj.file_type = file_79 if file_type in ['jpeg', 'jpg', 'png', 'gif'] else file_80
+                file_img = Option.objects.filter(option_name="图片")[0]
+                file_video = Option.objects.filter(option_name="视频")[0]
+                file_obj.file_type = file_img if file_type in ['jpeg', 'jpg', 'png', 'gif'] else file_video
                 file_obj.related_news = new
                 file_obj.save()
             except Exception as e:
