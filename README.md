@@ -3,7 +3,7 @@
 ---
 ---
 # 最终实现效果
-![前端页面效果]("https://github.com/pinkboy-top/uis/blob/master/news.gif")
+![](https://github.com/pinkboy-top/uis/blob/master/news.gif)
 ---
 ---
 ## 包含功能
