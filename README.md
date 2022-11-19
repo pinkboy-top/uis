@@ -1,6 +1,11 @@
 # uis
 使用Django3.2开发的用户社交系统。
 ---
+---
+# 最终实现效果
+![前端页面效果]("https://github.com/pinkboy-top/uis/blob/master/news.gif")
+---
+---
 ## 包含功能
 #### 用户管理
     用户注册
